@@ -1,140 +1,158 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="fr">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Créer un prêt</title>
+  <meta charset="UTF-8">
+  <title>Créer et lister les prêts</title>
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <style>
+    body {
+      font-family: sans-serif;
+      margin: 20px;
+    }
+    form {
+      background: #f5f5f5;
+      padding: 20px;
+      border-radius: 8px;
+      margin-bottom: 30px;
+      box-shadow: 0 0 10px #ccc;
+      max-width: 500px;
+    }
+    input, select, button {
+      width: 100%;
+      padding: 8px;
+      margin-top: 10px;
+    }
+    table {
+      border-collapse: collapse;
+      width: 100%;
+      margin-top: 20px;
+    }
+    th, td {
+      border: 1px solid #ccc;
+      padding: 8px;
+    }
+    th {
+      background-color: #f2f2f2;
+    }
+    .message { color: green; }
+    .erreur { color: red; }
+  </style>
 </head>
 <body>
-    <h2>Créer un prêt</h2>
-    <form id="form-pret">
-        <select name="id_type_pret" id="id_type_pret" required>
-            <option value="1" data-taux="3.5">Immobilier (3.5%)</option>
-            <option value="2" data-taux="1.5">Étudiant (1.5%)</option>
-        </select>
-        <input type="number" id="montant" placeholder="Montant du prêt" required min="1" step="0.01">
-        <input type="date" id="date_pret" required>
-        <input type="number" id="duree_mois" placeholder="Durée (en mois)" required min="1" step="1">
-        <button type="submit">Valider le prêt</button>
-        <div id="message" style="color: green;"></div>
-        <div id="erreur" style="color: red;"></div>
-    </form>
 
-    <script>
-    (function () {
-        const apiBase = "http://localhost/t/banque/ws";
+  <h2>Créer un prêt</h2>
+  <form id="form-pret">
+    <select name="id_type_pret" id="id_type_pret" required>
+      <option value="1" data-taux="3.5">Immobilier (3.5%)</option>
+      <option value="2" data-taux="1.5">Étudiant (1.5%)</option>
+    </select>
+    <input type="number" id="montant" placeholder="Montant du prêt" required min="1" step="0.01">
+    <input type="date" id="date_pret" required>
+    <input type="number" id="duree_mois" placeholder="Durée (en mois)" required min="1" step="1">
+    <button type="submit">Valider le prêt</button>
+    <div id="message" class="message"></div>
+    <div id="erreur" class="erreur"></div>
+  </form>
 
-        function ajax(method, url, data, callback) {
-            const xhr = new XMLHttpRequest();
-            xhr.open(method, `${apiBase}${url}`, true);
-            xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+  <h2>Liste des Prêts</h2>
+  <table id="table-prets">
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Client</th>
+        <th>Montant</th>
+        <th>Date prêt</th>
+        <th>Durée (mois)</th>
+        <th>Date échéance</th>
+        <th>Type</th>
+        <th>Action</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
 
-            xhr.onreadystatechange = () => {
-                if (xhr.readyState === 4) {
-                    console.log("Statut HTTP :", xhr.status, "Réponse brute :", xhr.responseText);
-                    try {
-                        const res = JSON.parse(xhr.responseText);
-                        callback(res, xhr.status);
-                    } catch (e) {
-                        console.error("Erreur lors du parsing JSON :", e, "Réponse brute :", xhr.responseText);
-                        document.getElementById("erreur").textContent = "Erreur lors du traitement de la réponse du serveur.";
-                    }
-                }
-            };
+  <script>
+    const apiBase = "http://localhost/t/banque/ws";
 
-            xhr.onerror = () => {
-                console.error("Erreur réseau lors de la requête AJAX");
-                document.getElementById("erreur").textContent = "Erreur réseau, veuillez vérifier votre connexion.";
-            };
-
-            console.log("Envoi de la requête :", method, url, data);
-            xhr.send(data);
+    function ajax(method, url, data, callback) {
+      const xhr = new XMLHttpRequest();
+      xhr.open(method, apiBase + url, true);
+      xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+      xhr.onreadystatechange = () => {
+        if (xhr.readyState === 4) {
+          try {
+            const res = JSON.parse(xhr.responseText);
+            callback(res, xhr.status);
+          } catch (e) {
+            console.error("Erreur parsing JSON", xhr.responseText);
+          }
         }
+      };
+      xhr.send(data);
+    }
 
-        function ajouterPret(event) {
-            event.preventDefault();
+    function ajouterPret(event) {
+      event.preventDefault();
+      document.getElementById("message").textContent = "";
+      document.getElementById("erreur").textContent = "";
 
-            // Effacer les messages précédents
-            document.getElementById("message").textContent = "";
-            document.getElementById("erreur").textContent = "";
+      const utilisateur = JSON.parse(localStorage.getItem("utilisateur") || "{}");
+      const id_client = utilisateur?.id;
 
-            const utilisateur = JSON.parse(localStorage.getItem("utilisateur") || "{}");
-            const id_client = utilisateur?.id;
+      if (!id_client) {
+        document.getElementById("erreur").textContent = "Utilisateur non connecté.";
+        return;
+      }
 
-            if (!id_client) {
-                console.error("Utilisateur non connecté, id_client manquant");
-                document.getElementById("erreur").textContent = "Utilisateur non connecté. Veuillez vous reconnecter.";
-                return;
-            }
+      const id_type_pret = document.getElementById("id_type_pret").value;
+      const montant = parseFloat(document.getElementById("montant").value);
+      const date_pret = document.getElementById("date_pret").value;
+      const duree_mois = parseInt(document.getElementById("duree_mois").value);
+      const taux = parseFloat(document.querySelector(`#id_type_pret option:checked`).dataset.taux);
 
-            const id_type_pret = document.getElementById("id_type_pret")?.value;
-            const montant = parseFloat(document.getElementById("montant")?.value);
-            const date_pret = document.getElementById("date_pret")?.value;
-            const duree_mois_raw = document.getElementById("duree_mois")?.value;
-            const duree_mois = parseInt(duree_mois_raw, 10);
+      const d = new Date(date_pret);
+      d.setMonth(d.getMonth() + duree_mois);
+      const date_echeance = d.toISOString().split('T')[0];
+      const interet = (montant * taux * duree_mois) / (100 * 12);
+      const date_validation = new Date().toISOString().split('T')[0];
+      const statut = 0;
 
-            // Validation des champs
-            if (!id_type_pret || !montant || !date_pret || isNaN(duree_mois)) {
-                console.error("Champs manquants ou invalides :", { id_type_pret, montant, date_pret, duree_mois });
-                document.getElementById("erreur").textContent = "Veuillez remplir tous les champs avec des valeurs valides.";
-                return;
-            }
+      const data = `id_client=${id_client}&id_type_pret=${id_type_pret}&montant=${montant}&date_pret=${date_pret}&duree_mois=${duree_mois}&date_echeance=${date_echeance}&interet=${interet}&date_validation=${date_validation}&statut=${statut}`;
 
-            if (montant <= 0 || duree_mois <= 0) {
-                console.error("Validation échouée : montant ou durée_mois invalide");
-                document.getElementById("erreur").textContent = "Montant et durée doivent être supérieurs à 0.";
-                return;
-            }
-
-            // Validation de la date
-            if (isNaN(new Date(date_pret).getTime())) {
-                console.error("Date de prêt invalide :", date_pret);
-                document.getElementById("erreur").textContent = "La date du prêt est invalide.";
-                return;
-            }
-
-            // Calcul de la date d'échéance
-            const d = new Date(date_pret);
-            d.setMonth(d.getMonth() + duree_mois);
-            const date_echeance = d.toISOString().split('T')[0];
-
-            // Calcul de l'intérêt
-            const taux = parseFloat(document.querySelector(`#id_type_pret option:checked`)?.dataset.taux);
-            if (!taux) {
-                console.error("Taux d'intérêt non défini");
-                document.getElementById("erreur").textContent = "Taux d'intérêt non défini.";
-                return;
-            }
-            const interet = (montant * taux * duree_mois) / (100 * 12);
-
-            // Date de validation (aujourd'hui)
-            const date_validation = new Date().toISOString().split('T')[0];
-
-            // Statut par défaut (0 pour "en attente")
-            const statut = 0;
-
-            const data = `id_client=${encodeURIComponent(id_client)}&id_type_pret=${encodeURIComponent(id_type_pret)}&montant=${encodeURIComponent(montant)}&date_pret=${encodeURIComponent(date_pret)}&duree_mois=${encodeURIComponent(duree_mois)}&date_echeance=${encodeURIComponent(date_echeance)}&interet=${encodeURIComponent(interet)}&date_validation=${encodeURIComponent(date_validation)}&statut=${encodeURIComponent(statut)}`;
-
-            ajax("POST", "/pret", data, (res, status) => {
-                console.log("Réponse reçue :", res, "Statut :", status);
-                if (status === 200 && res.message === "Prêt inséré avec succès") {
-                    document.getElementById("message").textContent = "✅ Prêt enregistré avec succès.";
-                    document.getElementById("form-pret").reset();
-                } else {
-                    document.getElementById("erreur").textContent = res.message || `Erreur lors de l'enregistrement du prêt (statut ${status}).`;
-                }
-            });
-        }
-
-        // Attacher l'événement submit explicitement
-        const form = document.getElementById("form-pret");
-        if (form) {
-            form.addEventListener("submit", ajouterPret);
-            console.log("Événement submit attaché au formulaire");
+      ajax("POST", "/pret", data, (res, status) => {
+        if (status === 200 && res.message === "Prêt inséré avec succès") {
+          document.getElementById("message").textContent = "✅ Prêt enregistré avec succès.";
+          document.getElementById("form-pret").reset();
+          chargerListePrets(); // mise à jour auto
         } else {
-            console.error("Formulaire #form-pret non trouvé");
+          document.getElementById("erreur").textContent = res.message || "Erreur.";
         }
-    })();
-    </script>
+      });
+    }
+
+    function chargerListePrets() {
+      $.get(apiBase + "/pret_admin", function(data) {
+        let rows = '';
+        data.forEach(p => {
+          rows += `
+            <tr>
+              <td>${p.id}</td>
+              <td>${p.client_nom} ${p.client_prenom}</td>
+              <td>${p.montant}</td>
+              <td>${p.date_pret}</td>
+              <td>${p.duree_mois}</td>
+              <td>${p.date_echeance}</td>
+              <td>${p.type_pret}</td>
+              <td><button class="valider-btn" data-id="${p.id}">Valider</button></td>
+            </tr>`;
+        });
+        $('#table-prets tbody').html(rows);
+      });
+    }
+
+    document.getElementById("form-pret").addEventListener("submit", ajouterPret);
+    chargerListePrets();
+  </script>
+
 </body>
 </html>
