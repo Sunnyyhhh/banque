@@ -94,43 +94,54 @@
     }
 
     function ajouterPret(event) {
-      event.preventDefault();
-      document.getElementById("message").textContent = "";
-      document.getElementById("erreur").textContent = "";
+  event.preventDefault();
 
-      const utilisateur = JSON.parse(localStorage.getItem("utilisateur") || "{}");
-      const id_client = utilisateur?.id;
+  // Réinitialiser les messages
+  document.getElementById("message").textContent = "";
+  document.getElementById("erreur").textContent = "";
 
-      if (!id_client) {
-        document.getElementById("erreur").textContent = "Utilisateur non connecté.";
-        return;
-      }
+  // ✅ Nouveau : Récupération du client depuis le <select>
+  const id_client = document.getElementById("id_client").value;
+  if (!id_client) {
+    document.getElementById("erreur").textContent = "Veuillez sélectionner un client.";
+    return;
+  }
 
-      const id_type_pret = document.getElementById("id_type_pret").value;
-      const montant = parseFloat(document.getElementById("montant").value);
-      const date_pret = document.getElementById("date_pret").value;
-      const duree_mois = parseInt(document.getElementById("duree_mois").value);
-      const taux = parseFloat(document.querySelector(`#id_type_pret option:checked`).dataset.taux);
+  const id_type_pret = document.getElementById("id_type_pret").value;
+  const montant = parseFloat(document.getElementById("montant").value);
+  const date_pret = document.getElementById("date_pret").value;
+  const duree_mois = parseInt(document.getElementById("duree_mois").value, 10);
 
-      const d = new Date(date_pret);
-      d.setMonth(d.getMonth() + duree_mois);
-      const date_echeance = d.toISOString().split('T')[0];
-      const interet = (montant * taux * duree_mois) / (100 * 12);
-      const date_validation = new Date().toISOString().split('T')[0];
-      const statut = 0;
+  const tauxOption = document.querySelector(`#id_type_pret option:checked`);
+  const taux = parseFloat(tauxOption?.dataset?.taux || 0);
 
-      const data = `id_client=${id_client}&id_type_pret=${id_type_pret}&montant=${montant}&date_pret=${date_pret}&duree_mois=${duree_mois}&date_echeance=${date_echeance}&interet=${interet}&date_validation=${date_validation}&statut=${statut}`;
+  // Validation
+  if (!id_type_pret || isNaN(montant) || montant <= 0 || !date_pret || isNaN(duree_mois) || duree_mois <= 0 || isNaN(taux)) {
+    document.getElementById("erreur").textContent = "Veuillez remplir tous les champs correctement.";
+    return;
+  }
 
-      ajax("POST", "/pret", data, (res, status) => {
-        if (status === 200 && res.message === "Prêt inséré avec succès") {
-          document.getElementById("message").textContent = "✅ Prêt enregistré avec succès.";
-          document.getElementById("form-pret").reset();
-          chargerListePrets(); // mise à jour auto
-        } else {
-          document.getElementById("erreur").textContent = res.message || "Erreur.";
-        }
-      });
+  // Calculs
+  const d = new Date(date_pret);
+  d.setMonth(d.getMonth() + duree_mois);
+  const date_echeance = d.toISOString().split('T')[0];
+  const interet = (montant * taux * duree_mois) / (100 * 12);
+  const date_validation = new Date().toISOString().split('T')[0];
+  const statut = 0;
+
+  const data = `id_client=${id_client}&id_type_pret=${id_type_pret}&montant=${montant}&date_pret=${date_pret}&duree_mois=${duree_mois}&date_echeance=${date_echeance}&interet=${interet}&date_validation=${date_validation}&statut=${statut}`;
+
+  ajax("POST", "/pret", data, (res, status) => {
+    if (status === 200 && res.message === "Prêt inséré avec succès") {
+      document.getElementById("message").textContent = "✅ Prêt enregistré avec succès.";
+      document.getElementById("form-pret").reset();
+      chargerListePrets(); // Rafraîchit la liste
+    } else {
+      document.getElementById("erreur").textContent = res.message || "Erreur lors de l'enregistrement du prêt.";
     }
+  });
+}
+
 
     function chargerListePrets() {
       $.get(apiBase + "/pret_admin", function(data) {
