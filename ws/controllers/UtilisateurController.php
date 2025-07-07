@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__ . '/../models/Utilisateur.php';
+require_once __DIR__ . '/../models/TypePret.php';
 require_once __DIR__ . '/../helpers/Utils.php';
 
 class UtilisateurController {
@@ -10,6 +11,15 @@ class UtilisateurController {
 
         $utilisateur = Utilisateur::login($email);
 
+        //nb de prets valides
+        $valides=TypePret::countPretValide();
+
+        //nb de prets non valides
+        $non_valides = TypePret::countPretNonValide();
+
+        //nb de types de pret
+        $nb_type=TypePret::countTypePret();
+        
         if ($utilisateur && $mot_de_passe === $utilisateur['mot_de_passe'])  {
             Flight::json([
                 'status' => 'success',
@@ -20,7 +30,10 @@ class UtilisateurController {
                     'email' => $utilisateur['email'],
                     'statut' => $utilisateur['statut'],
                     'solde' => $utilisateur['solde']
-                ]
+                ],
+                'nb_valides'=>$valides,
+                'nb_non_valides'=>$non_valides,
+                'type_pret'=>$nb_type,
             ]);
         } else {
             Flight::json([

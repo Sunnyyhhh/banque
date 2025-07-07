@@ -1,11 +1,42 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="fr">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title>Tableau de bord</title>
 </head>
 <body>
+    <div class="dashboard">
+        <h1>Bienvenue, <span id="prenom"></span> !</h1>
+        <p>Votre solde : <span id="solde"></span> €</p>
+        <p>Nombre de prêts validés : <span id="nb_valides"></span></p>
+        <p>Nombre de prêts non validés : <span id="nb_non_valides"></span></p>
+        <p>Nombre de types de prets : <span id="nb_type_pret"></span></p>
+        <a href="typePret.html">Voir les types de prêts</a>
+    </div>
+
+    <script>
+        function chargerDonneesUtilisateur() {
+            const utilisateur = JSON.parse(localStorage.getItem("utilisateur"));
+            const nb_valides = localStorage.getItem("nb_valides");
+            const nb_non_valides = localStorage.getItem("nb_non_valides");
+            const nb_type_pret=localStorage.getItem("type_pret");
+
+            if (utilisateur && nb_valides !== null) {
+                document.getElementById("prenom").textContent = utilisateur.prenom;
+                document.getElementById("solde").textContent = utilisateur.solde;
+                document.getElementById("nb_valides").textContent = nb_valides;
+                document.getElementById("nb_non_valides").textContent=nb_non_valides;
+                document.getElementById("nb_type_pret").textContent=nb_type_pret;
+            } else {
+                window.location.href = "../../index.html";
+            }
+        }
+
+        window.onload = () => {
+            chargerDonneesUtilisateur();
+        };
+    </script>
     <h1>vita ny login
         <h1><a href="add_fonds.html">Ajouter des fonds à l'établissement</a></h1>
     </h1>
