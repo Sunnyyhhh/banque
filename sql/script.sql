@@ -1,11 +1,10 @@
 CREATE DATABASE banque;
 USE banque;
 
-CREATE TABLE etablissement (
+CREATE TABLE fonds  (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    nom VARCHAR(100) UNIQUE NOT NULL,
     fonds_disponibles DECIMAL(15,2) NOT NULL DEFAULT 0,
-    date_ajout DATETIME DEFAULT CURRENT_TIMESTAMP
+    date_ajout DATETIME
 );
 
 CREATE TABLE type_pret (
@@ -29,7 +28,6 @@ CREATE TABLE pret (
     id INT AUTO_INCREMENT PRIMARY KEY,
     id_client INT NOT NULL,
     id_type_pret INT NOT NULL,
-    id_etablissement INT NOT NULL,
     montant DECIMAL(15,2) NOT NULL CHECK (montant > 0),
     date_pret DATE NOT NULL,
     duree_mois INT NOT NULL CHECK (duree_mois > 0),

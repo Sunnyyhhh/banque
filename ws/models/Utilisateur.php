@@ -3,7 +3,7 @@ require_once __DIR__ . '/../db.php';
 
 class Utilisateur {
 
-    public static function login($email) {
+    public static function login($email,$mdp) {
         $db = getDB();
         $stmt = $db->prepare("SELECT * FROM utilisateur WHERE email = ?");
         $stmt->execute([$email]);

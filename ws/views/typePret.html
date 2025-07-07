@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Types de prêt</title>
+    <style>
+        body { font-family: sans-serif; padding: 20px; }
+        table { border-collapse: collapse; width: 100%; margin-top: 20px; }
+        th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
+        th { background-color: #f2f2f2; }
+    </style>
+</head>
+<body>
+
+    <h1>Liste des types de prêts</h1>
+
+    <div>
+        <h3>Ajouter un type de prêt</h3>
+        <form onsubmit="ajouterOuModifier(); return false;" action="javascript:void(0);">
+            <input type="hidden" id="id">
+            <p>Nom du type de prêt : <input type="text" id="nom" required></p>
+            <p>Pourcentage de prêt : <input type="number" id="taux" step="0.01" required></p>
+            <p><input type="submit" value="Ajouter"></p>
+        </form>
+    </div>
+
+    <table id="table-typepret">
+        <thead>
+            <tr>
+                <th>Nom</th>
+                <th>Taux (%)</th>
+            </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+
+    <script>
+        const apiBase = "http://localhost/t/banque/ws";
+
+        function ajax(method, url, data, callback) {
+            const xhr = new XMLHttpRequest();
+            xhr.open(method, apiBase + url, true);
+            xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+            xhr.onreadystatechange = () => {
+                if (xhr.readyState === 4) {
+                    if (xhr.status === 200) {
+                        try {
+                            callback(JSON.parse(xhr.responseText));
+                        } catch (e) {
+                            console.error("Erreur JSON:", e, xhr.responseText);
+                        }
+                    } else {
+                        console.error("Erreur HTTP:", xhr.status, xhr.statusText);
+                    }
+                }
+            };
+            xhr.send(data);
+        }
+
+        function chargerPrets() {
+            ajax("GET", "/typePret", null, (data) => {
+                const tbody = document.querySelector("#table-typepret tbody");
+                tbody.innerHTML = "";
+                data.forEach(e => {
+                    const tr = document.createElement("tr");
+                    tr.innerHTML = `
+                        <td>${e.nom}</td>
+                        <td>${e.taux}</td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            });
+        }
+
+        function ajouterOuModifier() {
+            const nom = document.getElementById("nom").value;
+            const taux = document.getElementById("taux").value;
+            const id = document.getElementById("id").value;
+
+            const data = `nom=${encodeURIComponent(nom)}&taux=${encodeURIComponent(taux)}`;
+
+            if (id) {
+                ajax("PUT", `/typePret/${id}`, data, () => {
+                    resetForm();
+                    chargerPrets();
+                });
+            } else {
+                ajax("POST", "/typePret", data, () => {
+                    resetForm();
+                    chargerPrets();
+                });
+            }
+        }
+
+        function resetForm() {
+            document.getElementById("id").value = "";
+            document.getElementById("nom").value = "";
+            document.getElementById("taux").value = "";
+        }
+
+        document.addEventListener("DOMContentLoaded", chargerPrets);
+    </script>
+
+</body>
+</html>
