@@ -2,8 +2,6 @@
 require_once __DIR__ . '/../models/Utilisateur.php';
 require_once __DIR__ . '/../helpers/Utils.php';
 
-
-
 class UtilisateurController {
 
     public static function login() {
@@ -13,7 +11,6 @@ class UtilisateurController {
         $utilisateur = Utilisateur::login($email);
 
         if ($utilisateur && $mot_de_passe === $utilisateur['mot_de_passe'])  {
-            // succès
             Flight::json([
                 'status' => 'success',
                 'utilisateur' => [
@@ -26,7 +23,6 @@ class UtilisateurController {
                 ]
             ]);
         } else {
-            // échec
             Flight::json([
                 'status' => 'error',
                 'message' => 'Email ou mot de passe invalide.'
