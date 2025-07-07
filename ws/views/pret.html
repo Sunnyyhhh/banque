@@ -42,9 +42,11 @@
 
   <h2>Créer un prêt</h2>
   <form id="form-pret">
+    <select name="client" id="id_client" required>
+        <option value="">Sélectionner un client</option>
+    </select>
     <select name="id_type_pret" id="id_type_pret" required>
-      <option value="1" data-taux="3.5">Immobilier (3.5%)</option>
-      <option value="2" data-taux="1.5">Étudiant (1.5%)</option>
+        <option value="">Sélectionner un type de prêt</option>
     </select>
     <input type="number" id="montant" placeholder="Montant du prêt" required min="1" step="0.01">
     <input type="date" id="date_pret" required>
@@ -152,6 +154,54 @@
 
     document.getElementById("form-pret").addEventListener("submit", ajouterPret);
     chargerListePrets();
+
+    function chargerTypePrets() {
+    ajax("GET", "/GetPret", null, (res, status) => {
+        if (status === 200 && res.typePrets) {
+            const select = document.getElementById("id_type_pret");
+            select.innerHTML = '<option value="">Sélectionner un type de prêt</option>';
+            res.typePrets.forEach(tp => {
+                const option = document.createElement("option");
+                option.value = tp.id;
+                option.dataset.taux = tp.taux;
+                option.textContent = `${tp.nom} (${tp.taux}%)`;
+                select.appendChild(option);
+            });
+        } else {
+            document.getElementById("erreur").textContent = res.message || "Erreur lors du chargement des types de prêt.";
+        }
+    });
+}
+
+
+
+
+    function chargerClients() {
+            ajax("GET", "/clients", null, (res, status) => {
+                if (status === 200 && res.utilisateurs) {
+                    const selectClient = document.getElementById("id_client");
+                    selectClient.innerHTML = '<option value="">Sélectionner un client</option>';
+                    res.utilisateurs.forEach(client => {
+                        const option = document.createElement("option");
+                        option.value = client.id_utilisateur;
+                        option.textContent = `${client.prenom} ${client.nom} (${client.email})`;
+                        selectClient.appendChild(option);
+                    });
+                } else {
+                    document.getElementById("erreur").textContent = res.message || "Erreur lors du chargement des clients.";
+                }
+            });
+    }
+    window.addEventListener("DOMContentLoaded", () => {
+    chargerClients();
+    });
+
+    window.addEventListener("DOMContentLoaded", () => {
+    chargerTypePrets();
+    chargerListePrets(); // ta fonction existante
+});
+
+
   </script>
 
 </body>
