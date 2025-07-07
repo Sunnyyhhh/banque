@@ -32,9 +32,13 @@ CREATE TABLE pret (
     date_pret DATE NOT NULL,
     duree_mois INT NOT NULL CHECK (duree_mois > 0),
     date_echeance DATE NOT NULL,
+    interet DECIMAL(15,2) NOT NULL,
+    date_validation DATE NOT NULL,
+    statut INT NOT NULL,
     FOREIGN KEY (id_client) REFERENCES utilisateur(id_utilisateur),
     FOREIGN KEY (id_type_pret) REFERENCES type_pret(id)
-    );
+);
+
 
 CREATE TABLE pret_suivi (
     id INT AUTO_INCREMENT PRIMARY KEY,
