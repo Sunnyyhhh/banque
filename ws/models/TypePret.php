@@ -18,7 +18,29 @@ class TypePret {
     public static function countPretValide()
     {
         $db = getDB();
-        $stmt = $db->prepare("select *from pret join utilisateur where ");
-        return $db->lastInsertId();
+        $stmt = $db->prepare("SELECT COUNT(*) as total FROM pret WHERE statut = 1");
+        $stmt->execute();
+        $result = $stmt->fetch(PDO::FETCH_ASSOC);
+        return (int) $result['total'];
     }
+
+    public static function countPretNonValide()
+    {
+        $db = getDB();
+        $stmt = $db->prepare("SELECT COUNT(*) as total FROM pret WHERE statut = 0");
+        $stmt->execute();
+        $result = $stmt->fetch(PDO::FETCH_ASSOC);
+        return (int) $result['total'];
+    }
+
+    public static function countTypePret()
+    {
+        $db = getDB();
+        $stmt = $db->prepare("SELECT COUNT(*) as total FROM type_pret");
+        $stmt->execute();
+        $result = $stmt->fetch(PDO::FETCH_ASSOC);
+        return (int) $result['total'];
+    }
+
+
 }
