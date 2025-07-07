@@ -1,7 +1,7 @@
 CREATE DATABASE banque;
 USE banque;
 
-CREATE TABLE fonds  (
+CREATE TABLE fonds (
     id INT AUTO_INCREMENT PRIMARY KEY,
     fonds_disponibles DECIMAL(15,2) NOT NULL DEFAULT 0,
     date_ajout DATETIME
@@ -53,3 +53,11 @@ CREATE TABLE remboursement (
     date_remboursement DATE NOT NULL,
     FOREIGN KEY (id_pret) REFERENCES pret(id)
 );
+
+
+
+INSERT INTO utilisateur (nom, prenom, email, solde, statut, mot_de_passe, dtn) VALUES
+('Dupont', 'Jean', 'jean.dupont@email.com', 1000.00, 'client', 'azerty', '1990-01-01'),
+('Martin', 'Sophie', 'sophie.martin@email.com', 1500.00, 'client', '123456', '1992-05-10'),
+('Durand', 'Paul', 'paul.durand@email.com', 2000.00, 'client', 'motdepasse', '1988-09-15'),
+('Admin', 'Super', 'admin@email.com', 0.00, 'admin', 'adminpass', '1980-12-12');
