@@ -42,16 +42,18 @@
 
   <h2>Créer un prêt</h2>
   <form id="form-pret">
-    <select name="client" id="id_client" required>
+
+    <select name="id_client" id="id_client" required>
         <option value="">Sélectionner un client</option>
     </select>
     <select name="id_type_pret" id="id_type_pret" required>
         <option value="">Sélectionner un type de prêt</option>
     </select>
-    <input type="number" id="montant" placeholder="Montant du prêt" required min="1" step="0.01">
-    <input type="date" id="date_pret" required>
-    <input type="number" id="duree_mois" placeholder="Durée (en mois)" required min="1" step="1">
+    <input type="number" name="montant" id="montant" placeholder="Montant du prêt" required min="1" step="0.01">
+    <input type="date" name="date_pret" id="date_pret" required>
+    <input type="number" name="duree_mois" id="duree_mois" placeholder="Durée (en mois)" required min="1" step="1">
     <button type="submit">Valider le prêt</button>
+    <button type="button" id="downloadPdf" onclick="generatePdf()">Télécharger PDF</button>
     <div id="message" class="message"></div>
     <div id="erreur" class="erreur"></div>
   </form>
@@ -87,61 +89,90 @@
             callback(res, xhr.status);
           } catch (e) {
             console.error("Erreur parsing JSON", xhr.responseText);
+            alert("Erreur serveur. Veuillez vérifier la console.");
           }
         }
       };
       xhr.send(data);
     }
 
-    function ajouterPret(event) {
-  event.preventDefault();
+    function generatePdf() {
+      const id_client = document.getElementById("id_client").value;
+      const id_type_pret = document.getElementById("id_type_pret").value;
+      const montant = document.getElementById("montant").value;
+      const date_pret = document.getElementById("date_pret").value;
+      const duree_mois = document.getElementById("duree_mois").value;
 
-  // Réinitialiser les messages
-  document.getElementById("message").textContent = "";
-  document.getElementById("erreur").textContent = "";
+      if (!id_client || !id_type_pret || !montant || !date_pret || !duree_mois) {
+        alert("Veuillez remplir tous les champs du formulaire pour générer le PDF.");
+        return;
+      }
 
-  // ✅ Nouveau : Récupération du client depuis le <select>
-  const id_client = document.getElementById("id_client").value;
-  if (!id_client) {
-    document.getElementById("erreur").textContent = "Veuillez sélectionner un client.";
-    return;
-  }
+      const data = `id_client=${id_client}&id_type_pret=${id_type_pret}&montant=${montant}&date_pret=${date_pret}&duree_mois=${duree_mois}`;
 
-  const id_type_pret = document.getElementById("id_type_pret").value;
-  const montant = parseFloat(document.getElementById("montant").value);
-  const date_pret = document.getElementById("date_pret").value;
-  const duree_mois = parseInt(document.getElementById("duree_mois").value, 10);
+      const xhr = new XMLHttpRequest();
+      xhr.open("POST", apiBase + "/pret/pdf", true);
+      xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+      xhr.responseType = "blob";
 
-  const tauxOption = document.querySelector(`#id_type_pret option:checked`);
-  const taux = parseFloat(tauxOption?.dataset?.taux || 0);
+      xhr.onload = function () {
+        if (xhr.status === 200) {
+          const blob = new Blob([xhr.response], { type: "application/pdf" });
+          const link = document.createElement("a");
+          link.href = window.URL.createObjectURL(blob);
+          link.download = "pret.pdf";
+          link.click();
+        } else {
+          alert("Erreur lors de la génération du PDF.");
+        }
+      };
 
-  // Validation
-  if (!id_type_pret || isNaN(montant) || montant <= 0 || !date_pret || isNaN(duree_mois) || duree_mois <= 0 || isNaN(taux)) {
-    document.getElementById("erreur").textContent = "Veuillez remplir tous les champs correctement.";
-    return;
-  }
-
-  // Calculs
-  const d = new Date(date_pret);
-  d.setMonth(d.getMonth() + duree_mois);
-  const date_echeance = d.toISOString().split('T')[0];
-  const interet = (montant * taux * duree_mois) / (100 * 12);
-  const date_validation = new Date().toISOString().split('T')[0];
-  const statut = 0;
-
-  const data = `id_client=${id_client}&id_type_pret=${id_type_pret}&montant=${montant}&date_pret=${date_pret}&duree_mois=${duree_mois}&date_echeance=${date_echeance}&interet=${interet}&date_validation=${date_validation}&statut=${statut}`;
-
-  ajax("POST", "/pret", data, (res, status) => {
-    if (status === 200 && res.message === "Prêt inséré avec succès") {
-      document.getElementById("message").textContent = "✅ Prêt enregistré avec succès.";
-      document.getElementById("form-pret").reset();
-      chargerListePrets(); // Rafraîchit la liste
-    } else {
-      document.getElementById("erreur").textContent = res.message || "Erreur lors de l'enregistrement du prêt.";
+      xhr.send(data);
     }
-  });
-}
 
+    function ajouterPret(event) {
+      event.preventDefault();
+      document.getElementById("message").textContent = "";
+      document.getElementById("erreur").textContent = "";
+
+      const id_client = document.getElementById("id_client").value;
+      if (!id_client) {
+        document.getElementById("erreur").textContent = "Veuillez sélectionner un client.";
+        return;
+      }
+
+      const id_type_pret = document.getElementById("id_type_pret").value;
+      const montant = parseFloat(document.getElementById("montant").value);
+      const date_pret = document.getElementById("date_pret").value;
+      const duree_mois = parseInt(document.getElementById("duree_mois").value, 10);
+
+      const tauxOption = document.querySelector(`#id_type_pret option:checked`);
+      const taux = parseFloat(tauxOption?.dataset?.taux || 0);
+
+      if (!id_type_pret || isNaN(montant) || montant <= 0 || !date_pret || isNaN(duree_mois) || duree_mois <= 0 || isNaN(taux)) {
+        document.getElementById("erreur").textContent = "Veuillez remplir tous les champs correctement.";
+        return;
+      }
+
+      const d = new Date(date_pret);
+      d.setMonth(d.getMonth() + duree_mois);
+      const date_echeance = d.toISOString().split('T')[0];
+      const interet = (montant * taux * duree_mois) / (100 * 12);
+      const date_validation = new Date().toISOString().split('T')[0];
+      const statut = 0;
+
+      const data = `id_client=${id_client}&id_type_pret=${id_type_pret}&montant=${montant}&date_pret=${date_pret}&duree_mois=${duree_mois}&date_echeance=${date_echeance}&interet=${interet}&date_validation=${date_validation}&statut=${statut}`;
+
+      ajax("POST", "/pret", data, (res, status) => {
+        if (status === 200 && res.message === "Prêt inséré avec succès") {
+          document.getElementById("message").textContent = "✅ Prêt enregistré avec succès.";
+          document.getElementById("form-pret").reset();
+          chargerListePrets();
+        } else {
+          document.getElementById("erreur").textContent = res.message || "Erreur lors de l'enregistrement du prêt.";
+        }
+      });
+    }
 
     function chargerListePrets() {
       $.get(apiBase + "/pret_admin", function(data) {
@@ -163,56 +194,47 @@
       });
     }
 
-    document.getElementById("form-pret").addEventListener("submit", ajouterPret);
-    chargerListePrets();
-
     function chargerTypePrets() {
-    ajax("GET", "/GetPret", null, (res, status) => {
+      ajax("GET", "/GetPret", null, (res, status) => {
         if (status === 200 && res.typePrets) {
-            const select = document.getElementById("id_type_pret");
-            select.innerHTML = '<option value="">Sélectionner un type de prêt</option>';
-            res.typePrets.forEach(tp => {
-                const option = document.createElement("option");
-                option.value = tp.id;
-                option.dataset.taux = tp.taux;
-                option.textContent = `${tp.nom} (${tp.taux}%)`;
-                select.appendChild(option);
-            });
+          const select = document.getElementById("id_type_pret");
+          select.innerHTML = '<option value="">Sélectionner un type de prêt</option>';
+          res.typePrets.forEach(tp => {
+            const option = document.createElement("option");
+            option.value = tp.id;
+            option.dataset.taux = tp.taux;
+            option.textContent = `${tp.nom} (${tp.taux}%)`;
+            select.appendChild(option);
+          });
         } else {
-            document.getElementById("erreur").textContent = res.message || "Erreur lors du chargement des types de prêt.";
+          document.getElementById("erreur").textContent = res.message || "Erreur lors du chargement des types de prêt.";
         }
-    });
-}
-
-
-
+      });
+    }
 
     function chargerClients() {
-            ajax("GET", "/clients", null, (res, status) => {
-                if (status === 200 && res.utilisateurs) {
-                    const selectClient = document.getElementById("id_client");
-                    selectClient.innerHTML = '<option value="">Sélectionner un client</option>';
-                    res.utilisateurs.forEach(client => {
-                        const option = document.createElement("option");
-                        option.value = client.id_utilisateur;
-                        option.textContent = `${client.prenom} ${client.nom} (${client.email})`;
-                        selectClient.appendChild(option);
-                    });
-                } else {
-                    document.getElementById("erreur").textContent = res.message || "Erreur lors du chargement des clients.";
-                }
-            });
+      ajax("GET", "/clients", null, (res, status) => {
+        if (status === 200 && res.utilisateurs) {
+          const selectClient = document.getElementById("id_client");
+          selectClient.innerHTML = '<option value="">Sélectionner un client</option>';
+          res.utilisateurs.forEach(client => {
+            const option = document.createElement("option");
+            option.value = client.id_utilisateur;
+            option.textContent = `${client.prenom} ${client.nom} (${client.email})`;
+            selectClient.appendChild(option);
+          });
+        } else {
+          document.getElementById("erreur").textContent = res.message || "Erreur lors du chargement des clients.";
+        }
+      });
     }
+
     window.addEventListener("DOMContentLoaded", () => {
-    chargerClients();
+      chargerClients();
+      chargerTypePrets();
+      chargerListePrets();
+      document.getElementById("form-pret").addEventListener("submit", ajouterPret);
     });
-
-    window.addEventListener("DOMContentLoaded", () => {
-    chargerTypePrets();
-    chargerListePrets(); // ta fonction existante
-});
-
-
   </script>
 
 </body>
