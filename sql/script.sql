@@ -33,8 +33,8 @@ CREATE TABLE pret (
     duree_mois INT NOT NULL CHECK (duree_mois > 0),
     date_echeance DATE NOT NULL,
     FOREIGN KEY (id_client) REFERENCES utilisateur(id_utilisateur),
-    FOREIGN KEY (id_type_pret) REFERENCES type_pret(id),
-    FOREIGN KEY (id_etablissement) REFERENCES etablissement(id)
+    FOREIGN KEY (id_type_pret) REFERENCES type_pret(id)
+   
 );
 
 CREATE TABLE pret_suivi (
