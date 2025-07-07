@@ -6,3 +6,4 @@ Flight::route('GET /typePret/@id', ['TypePretController', 'getById']);
 Flight::route('POST /typePret', ['TypePretController', 'create']);
 Flight::route('PUT /typePret/@id', ['TypePretController', 'update']);
 Flight::route('DELETE /typePret/@id', ['TypePretController', 'delete']);
+
