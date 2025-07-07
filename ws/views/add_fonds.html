@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Ajouter des Fonds</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .form-container { max-width: 400px; margin: auto; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; }
+        input[type="number"] { width: 100%; padding: 8px; }
+        button { padding: 10px 20px; background-color: #4CAF50; color: white; border: none; cursor: pointer; }
+        button:hover { background-color: #45a049; }
+        #message { margin-top: 10px; color: green; }
+        .error { color: red; }
+    </style>
+</head>
+<body>
+    <div class="form-container">
+        <h2>Ajouter des Fonds à l'Établissement</h2>
+        <form id="add-fonds-form">
+            <div class="form-group">
+                <label for="montant">Montant à ajouter (€)</label>
+                <input type="number" id="montant" name="montant" step="0.01" min="0" required>
+            </div>
+            <button type="submit">Ajouter</button>
+        </form>
+        <div id="message"></div>
+    </div>
+
+    <script>
+        $(document).ready(function() {
+            $('#add-fonds-form').submit(function(e) {
+                e.preventDefault();
+                let montant = $('#montant').val();
+
+                if (!montant || montant <= 0) {
+                    $('#message').addClass('error').text('Veuillez saisir un montant positif.');
+                    return;
+                }
+
+                console.log('Envoi de la requête AJAX avec montant:', montant);
+
+                $.ajax({
+                    url: '/t/banque/ws/add_fonds', // Alternative: '/ws/add_fonds' si ws/ est la racine web
+                    type: 'POST',
+                    data: { montant: montant },
+                    success: function(response) {
+                        console.log('Réponse réussie:', response);
+                        $('#message').removeClass('error').text(response.message);
+                        $('#montant').val('');
+                        setTimeout(function() {
+                        window.location.href = 'accueil.html';
+                    }, 1000);
+                    },
+                    error: function(xhr, status, error) {
+                        console.error('Erreur AJAX:', status, error, 'Response:', xhr.responseText);
+                        $('#message').addClass('error').text('Erreur lors de l\'ajout des fonds: ' + (xhr.responseText || 'Vérifiez la console pour plus de détails.'));
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>

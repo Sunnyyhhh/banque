@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Accueil - Solde Établissement</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .container { max-width: 400px; margin: auto; text-align: center; }
+        .solde { font-size: 2em; color: #4CAF50; margin-top: 20px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Accueil</h2>
+        <div id="solde" class="solde">Votre solde actuel est de ...</div>
+    </div>
+    <script>
+        $(document).ready(function() {
+            $.ajax({
+                url: '/t/banque/ws/get_solde_etablissement',
+                type: 'GET',
+                success: function(response) {
+                    $('#solde').text('Votre solde actuel est de ' + response.solde + ' €');
+                },
+                error: function() {
+                    $('#solde').text('Impossible de récupérer le solde.');
+                }
+            });
+        });
+    </script>
+</body>
+</html>

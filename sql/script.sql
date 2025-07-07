@@ -1,6 +1,7 @@
+drop database banque;
 CREATE DATABASE banque;
 USE banque;
-
+ALTER TABLE etablissement DROP COLUMN nom;
 CREATE TABLE etablissement (
     id INT AUTO_INCREMENT PRIMARY KEY,
     nom VARCHAR(100) UNIQUE NOT NULL,
