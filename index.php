@@ -50,37 +50,38 @@
 </form>
 
 <script>
-  const apiBase = "http://localhost/t/banque/ws"; // mets bien ton chemin ici
+  const apiBase = "http://localhost/t/banque/ws";
+  
+  function ajax(method, url, data, callback) {
+  const xhr = new XMLHttpRequest();
+  xhr.open(method, apiBase + url, true);
+  xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+  xhr.onreadystatechange = () => {
+    if (xhr.readyState === 4) {
+      const res = JSON.parse(xhr.responseText);
+      callback(res, xhr.status);
+    }
+  };
+  xhr.send(data);
+}
 
-  function login(event) {
-    event.preventDefault(); // éviter le rechargement de la page
+function login(event) {
+  event.preventDefault();
 
-    const email = document.getElementById("email").value;
-    const mot_de_passe = document.getElementById("mot_de_passe").value;
+  const email = document.getElementById("email").value;
+  const mot_de_passe = document.getElementById("mot_de_passe").value;
 
-    const data = `email=${encodeURIComponent(email)}&mot_de_passe=${encodeURIComponent(mot_de_passe)}`;
+  const data = `email=${encodeURIComponent(email)}&mot_de_passe=${encodeURIComponent(mot_de_passe)}`;
 
-    const xhr = new XMLHttpRequest();
-    xhr.open("POST", apiBase + "/login", true); // appelle POST /login (défini dans Flight)
-    xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
-
-    xhr.onreadystatechange = () => {
-      if (xhr.readyState === 4) {
-        const res = JSON.parse(xhr.responseText);
-
-        if (xhr.status === 200 && res.status === "success") {
-          // Stocker l'utilisateur pour utilisation future
-          localStorage.setItem("utilisateur", JSON.stringify(res.utilisateur));
-
-          window.location.href = "ws/views/dashboard.html";
-        } else {
-          document.getElementById("erreur").textContent = res.message || "Email ou mot de passe invalide.";
-        }
-      }
-    };
-
-    xhr.send(data);
-  }
+  ajax("POST", "/login", data, (res, status) => {
+    if (status === 200 && res.status === "success") {
+      localStorage.setItem("utilisateur", JSON.stringify(res.utilisateur));
+      window.location.href = "ws/views/dashboard.html";
+    } else {
+      document.getElementById("erreur").textContent = res.message || "Email ou mot de passe invalide.";
+    }
+  });
+}
 </script>
 
 </body>
