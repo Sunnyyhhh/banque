@@ -52,13 +52,16 @@
         }
 
         function ajouterPret(event) {
-            event.preventDefault();
+            event.preventDefault(); // Empêche le rechargement de la page
+            console.log("Formulaire soumis, event.preventDefault() appelé");
 
             // Effacer les messages précédents
             document.getElementById("message").textContent = "";
             document.getElementById("erreur").textContent = "";
 
+            // Récupérer id_client depuis localStorage
             const utilisateur = JSON.parse(localStorage.getItem("utilisateur") || "{}");
+            console.log("Contenu de localStorage.utilisateur :", utilisateur);
             const id_client = utilisateur?.id;
 
             if (!id_client) {
