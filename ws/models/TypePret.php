@@ -10,8 +10,8 @@ class TypePret {
 
     public static function create($data) {
         $db = getDB();
-        $stmt = $db->prepare("INSERT INTO type_pret (nom,taux) VALUES (?, ?)");
-        $stmt->execute([$data->nom, $data->taux]);
+        $stmt = $db->prepare("INSERT INTO type_pret (nom,taux,nb_annees) VALUES (?,?,?)");
+        $stmt->execute([$data->nom, $data->taux, $data->nb_annees]);
         return $db->lastInsertId();
     }
 

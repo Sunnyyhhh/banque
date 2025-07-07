@@ -123,7 +123,7 @@
         if (status === 200 && res.message === "Prêt inséré avec succès") {
           document.getElementById("message").textContent = "✅ Prêt enregistré avec succès.";
           document.getElementById("form-pret").reset();
-          chargerListePrets(); // mise à jour auto
+          chargerListePrets(); 
         } else {
           document.getElementById("erreur").textContent = res.message || "Erreur.";
         }

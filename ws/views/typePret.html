@@ -21,6 +21,7 @@
             <input type="hidden" id="id">
             <p>Nom du type de prêt : <input type="text" id="nom" required></p>
             <p>Pourcentage de prêt : <input type="number" id="taux" step="0.01" required></p>
+            <p>Nombre d'annees : <input type="number" id="nb_annees"></p>
             <p><input type="submit" value="Ajouter"></p>
         </form>
     </div>
@@ -30,6 +31,7 @@
             <tr>
                 <th>Nom</th>
                 <th>Taux (%)</th>
+                <th>Nombre d'annees</th>
             </tr>
         </thead>
         <tbody></tbody>
@@ -67,6 +69,7 @@
                     tr.innerHTML = `
                         <td>${e.nom}</td>
                         <td>${e.taux}</td>
+                        <td>${e.nb_annees}</td>
                     `;
                     tbody.appendChild(tr);
                 });
@@ -76,9 +79,10 @@
         function ajouterOuModifier() {
             const nom = document.getElementById("nom").value;
             const taux = document.getElementById("taux").value;
+            const nb_annees = document.getElementById("nb_annees").value;
             const id = document.getElementById("id").value;
 
-            const data = `nom=${encodeURIComponent(nom)}&taux=${encodeURIComponent(taux)}`;
+            const data = `nom=${encodeURIComponent(nom)}&taux=${encodeURIComponent(taux)}&nb_annees=${encodeURIComponent(nb_annees)}`;
 
             if (id) {
                 ajax("PUT", `/typePret/${id}`, data, () => {
@@ -97,6 +101,7 @@
             document.getElementById("id").value = "";
             document.getElementById("nom").value = "";
             document.getElementById("taux").value = "";
+            document.getElementById("nb_annees").value = "";
         }
 
         document.addEventListener("DOMContentLoaded", chargerPrets);
