@@ -8,6 +8,12 @@ class TypePretController {
         Flight::json($TypePrets);
     }
 
+    public static function getAllType() {
+        $TypePrets = TypePret::getAll();
+        Flight::json(['typePrets' => $TypePrets]);
+
+    }
+
     public static function create() {
         $data = Flight::request()->data;
         $id = TypePret::create($data);
