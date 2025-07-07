@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Liste des Prêts (Admin)</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+        table { border-collapse: collapse; width: 100%; }
+        th, td { border: 1px solid #ccc; padding: 8px; }
+        th { background-color: #f2f2f2; }
+    </style>
+</head>
+<body>
+    <h2>Liste des Prêts</h2>
+    <table id="table-prets">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Client</th>
+                <th>Montant</th>
+                <th>Date prêt</th>
+                <th>Durée (mois)</th>
+                <th>Date échéance</th>
+                <th>Type</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+    <script>
+        $(function() {
+            $.get('/t/banque/ws/pret_admin', function(data) {
+                let rows = '';
+                data.forEach(function(p) {
+                    rows += `<tr>
+                        <td>${p.id}</td>
+                        <td>${p.client_nom} ${p.client_prenom}</td>
+                        <td>${p.montant}</td>
+                        <td>${p.date_pret}</td>
+                        <td>${p.duree_mois}</td>
+                        <td>${p.date_echeance}</td>
+                        <td>${p.type_pret}</td>
+                        <td><button class="valider-btn" data-id="${p.id}">Valider</button></td>
+                    </tr>`;
+                });
+                $('#table-prets tbody').html(rows);
+            });
+        });
+    </script>
+</body>
+</html>
