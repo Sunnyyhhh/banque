@@ -52,16 +52,13 @@
         }
 
         function ajouterPret(event) {
-            event.preventDefault(); // Empêche le rechargement de la page
-            console.log("Formulaire soumis, event.preventDefault() appelé");
+            event.preventDefault();
 
             // Effacer les messages précédents
             document.getElementById("message").textContent = "";
             document.getElementById("erreur").textContent = "";
 
-            // Récupérer id_client depuis localStorage
             const utilisateur = JSON.parse(localStorage.getItem("utilisateur") || "{}");
-            console.log("Contenu de localStorage.utilisateur :", utilisateur);
             const id_client = utilisateur?.id;
 
             if (!id_client) {
@@ -74,7 +71,6 @@
             const montant = parseFloat(document.getElementById("montant")?.value);
             const date_pret = document.getElementById("date_pret")?.value;
             const duree_mois_raw = document.getElementById("duree_mois")?.value;
-            console.log("Valeur brute de duree_mois :", duree_mois_raw);
             const duree_mois = parseInt(duree_mois_raw, 10);
 
             // Validation des champs
