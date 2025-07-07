@@ -1,9 +1,9 @@
 <?php
 function getDB() {
     $host = 'localhost';
-    $dbname = 'banque';
+    $dbname = 'tp_flight';
     $username = 'root';
-    $password = '';
+    $password = 'root';
 
     try {
         return new PDO("mysql:host=$host;dbname=$dbname;charset=utf8", $username, $password, [
