@@ -11,6 +11,7 @@
 <body>
   <form onsubmit="login(event)">
     <h2>Connexion</h2>
+    <h1>ETU003174_ETU3218_ETU3157</h1>
     <input type="email" id="email" placeholder="Email" required>
     <input type="password" id="mot_de_passe" placeholder="Mot de passe" required>
     <button type="submit">Se connecter</button>

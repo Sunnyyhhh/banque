@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Comparaison de simulations</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+            height: 100vh;
+            display: flex;
+            background: #f4f6f8;
+            overflow: hidden;
+        }
+
+        .sidebar {
+            width: 220px;
+            background-color: #2c3e50;
+            color: white;
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+            box-sizing: border-box;
+            position: fixed;
+            top: 0;
+            left: 0;
+            bottom: 0;
+        }
+
+        .sidebar a {
+            color: white;
+            text-decoration: none;
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 4px;
+            transition: background-color 0.3s ease;
+        }
+
+        .sidebar a:hover {
+            background-color: #34495e;
+        }
+
+        .main-content {
+            margin-left: 220px;
+            padding: 30px;
+            flex: 1;
+            height: 100vh;
+            overflow-y: auto;
+            box-sizing: border-box;
+            background: white;
+            display: flex;
+            flex-direction: column;
+            gap: 30px;
+        }
+
+        form {
+            background: #f5f5f5;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 3px 6px rgba(0,0,0,0.1);
+            max-width: 500px;
+            width: 100%;
+        }
+
+        input, select, button {
+            width: 100%;
+            padding: 10px;
+            margin-top: 12px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 15px;
+            box-sizing: border-box;
+        }
+
+        button {
+            background-color: #2980b9;
+            color: white;
+            border: none;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        button:hover {
+            background-color: #1f6391;
+        }
+
+        .validate-button {
+            background-color: #27ae60;
+            margin-top: 10px;
+        }
+
+        .validate-button:hover {
+            background-color: #219653;
+        }
+
+        .message { color: green; margin-top: 10px; }
+        .erreur { color: red; margin-top: 10px; }
+
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            box-shadow: 0 3px 6px rgba(0,0,0,0.1);
+            background: white;
+        }
+
+        th, td {
+            padding: 12px 15px;
+            border: 1px solid #ddd;
+            text-align: left;
+        }
+
+        th {
+            background-color: #2980b9;
+            color: white;
+        }
+
+        .totaux-simulation {
+            font-weight: bold;
+            font-size: 16px;
+            margin-top: 20px;
+            background: #ecf0f1;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .simulation-container {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .simulation-table {
+            flex: 1;
+            min-width: 45%;
+        }
+    </style>
+</head>
+<body>
+    <nav class="sidebar">
+        <a href="dashboard.html">Home</a>
+        <a href="pret.html">Insérer prêt</a>
+        <a href="typePret.html">Types de prêts</a>
+        <a href="add_fonds.html">Ajouter des fonds</a>
+        <a href="simulation.html">Faire une simulation</a>
+        <a href="comparaison.html">Comparer simulations</a>
+    </nav>
+
+    <main class="main-content">
+        <h2>Comparaison de simulations</h2>
+        <form id="form-comparaison">
+            <select name="groupe_1" id="groupe_1" required>
+                <option value="">Sélectionner un groupe de remboursement (1)</option>
+            </select>
+            <select name="groupe_2" id="groupe_2" required>
+                <option value="">Sélectionner un groupe de remboursement (2)</option>
+            </select>
+            <input type="number" id="id_groupe" placeholder="ID du groupe" required min="1" step="1">
+            <button type="submit">Comparer</button>
+            <div id="message" class="message"></div>
+            <div id="erreur" class="erreur"></div>
+        </form>
+
+        <h2>Résultats de la comparaison</h2>
+        <div class="simulation-container">
+            <div class="simulation-table">
+                <h3>Groupe 1</h3>
+                <table id="table-prets-1" border="1">
+                    <thead>
+                        <tr>
+                            <th>Mois</th>
+                            <th>Montant mensuel</th>
+                            <th>Intérêt</th>
+                            <th>Assurance</th>
+                            <th>Date remboursement</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tbody-prets-1"></tbody>
+                </table>
+                <div id="totaux-simulation-1" class="totaux-simulation"></div>
+                <button id="validate-1" class="validate-button" style="display: none;">Valider Groupe 1</button>
+            </div>
+            <div class="simulation-table">
+                <h3>Groupe 2</h3>
+                <table id="table-prets-2" border="1">
+                    <thead>
+                        <tr>
+                            <th>Mois</th>
+                            <th>Montant mensuel</th>
+                            <th>Intérêt</th>
+                            <th>Assurance</th>
+                            <th>Date remboursement</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tbody-prets-2"></tbody>
+                </table>
+                <div id="totaux-simulation-2" class="totaux-simulation"></div>
+                <button id="validate-2" class="validate-button" style="display: none;">Valider Groupe 2</button>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        const apiBase = "http://localhost/t/banque/ws";
+        let groupeData1 = null;
+        let groupeData2 = null;
+
+        function ajax(method, url, data, callback) {
+            const xhr = new XMLHttpRequest();
+            xhr.open(method, apiBase + url, true);
+            xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+            xhr.onreadystatechange = () => {
+                if (xhr.readyState === 4) {
+                    if (xhr.status === 200) {
+                        try {
+                            const res = JSON.parse(xhr.responseText);
+                            callback(res, xhr.status);
+                        } catch (e) {
+                            console.error("Erreur parsing JSON", xhr.responseText);
+                            document.getElementById("erreur").textContent = "Erreur lors de la communication avec le serveur.";
+                        }
+                    } else {
+                        document.getElementById("erreur").textContent = `Erreur ${xhr.status}: ${xhr.responseText}`;
+                    }
+                }
+            };
+            xhr.send(data);
+        }
+
+        function chargerGroupes() {
+            ajax("GET", "/remboursements/groupes", null, (res, status) => {
+                if (status === 200 && res.groupes) {
+                    const selects = [document.getElementById("groupe_1"), document.getElementById("groupe_2")];
+                    selects.forEach(select => {
+                        select.innerHTML = '<option value="">Sélectionner un groupe de remboursement</option>';
+                        res.groupes.forEach(groupe => {
+                            const option = document.createElement("option");
+                            option.value = groupe.id_groupe;
+                            option.textContent = `Groupe ${groupe.id_groupe} (Montant: ${parseFloat(groupe.montant).toFixed(2)} Ar, Date: ${groupe.date_remboursement})`;
+                            select.appendChild(option);
+                        });
+                    });
+                } else {
+                    document.getElementById("erreur").textContent = res.message || "Erreur lors du chargement des groupes.";
+                }
+            });
+        }
+
+        function afficherRemboursements(remboursements, index) {
+            const tbody = document.getElementById(`tbody-prets-${index}`);
+            const totalDiv = document.getElementById(`totaux-simulation-${index}`);
+            const validateButton = document.getElementById(`validate-${index}`);
+            tbody.innerHTML = "";
+
+            let totalInteret = 0;
+            let totalAssurance = 0;
+            let totalMensuel = 0;
+            let mois = 0;
+
+            remboursements.forEach(item => {
+                mois++;
+                const tr = document.createElement("tr");
+                tr.innerHTML = `
+                    <td>${mois}</td>
+                    <td>${parseFloat(item.montant).toFixed(2)} Ar</td>
+                    <td>${parseFloat(item.interet).toFixed(2)} Ar</td>
+                    <td>${parseFloat(item.assurance).toFixed(2)} Ar</td>
+                    <td>${item.date_remboursement}</td>
+                `;
+                tbody.appendChild(tr);
+
+                totalInteret += parseFloat(item.interet);
+                totalAssurance += parseFloat(item.assurance);
+                totalMensuel += parseFloat(item.montant);
+            });
+
+            totalDiv.innerHTML = `
+                Total des intérêts : <strong>${totalInteret.toFixed(2)} Ar</strong><br>
+                Total des assurances : <strong>${totalAssurance.toFixed(2)} Ar</strong><br>
+                <span style="color:green;">Total à payer :</span> <strong>${totalMensuel.toFixed(2)} Ar</strong>
+            `;
+
+            validateButton.style.display = remboursements.length > 0 ? 'block' : 'none';
+            if (index === 1) {
+                groupeData1 = remboursements;
+            } else {
+                groupeData2 = remboursements;
+            }
+        }
+
+        function validerGroupe(index) {
+            const remboursements = index === 1 ? groupeData1 : groupeData2;
+            if (!remboursements || remboursements.length === 0) {
+                document.getElementById("erreur").textContent = `Aucun groupe à valider pour Groupe ${index}.`;
+                return;
+            }
+
+            const id_groupe = parseInt(document.getElementById("id_groupe").value, 10);
+            if (isNaN(id_groupe) || id_groupe <= 0) {
+                document.getElementById("erreur").textContent = "Veuillez entrer un ID de groupe valide.";
+                return;
+            }
+
+            const montantMensuel = parseFloat(remboursements[0].montant);
+            const assuranceMensuelle = parseFloat(remboursements[0].assurance);
+            const duree_mois = remboursements.length;
+            const date_pret = remboursements[0].date_remboursement;
+            const date_echeance = new Date(date_pret);
+            date_echeance.setMonth(date_echeance.getMonth() + duree_mois);
+            const date_echeance_str = date_echeance.toISOString().split('T')[0];
+            const assurance = (assuranceMensuelle * 12 * 100) / (montantMensuel * duree_mois);
+
+            const data = `id_client=1&id_type_pret=1&montant=${encodeURIComponent(montantMensuel * duree_mois)}&date_pret=${encodeURIComponent(date_pret)}&duree_mois=${encodeURIComponent(duree_mois)}&date_echeance=${encodeURIComponent(date_echeance_str)}&assurance=${encodeURIComponent(assurance)}&id_groupe=${encodeURIComponent(id_groupe)}`;
+
+            ajax("POST", "/pret", data, (res, status) => {
+                if (status === 200 && res.id) {
+                    document.getElementById("message").textContent = `Groupe ${index} validé avec succès (ID prêt: ${res.id}).`;
+                    document.getElementById("erreur").textContent = "";
+                } else {
+                    document.getElementById("erreur").textContent = res.message || "Erreur lors de la validation du groupe.";
+                }
+            });
+        }
+
+        document.getElementById("form-comparaison").addEventListener("submit", function (e) {
+            e.preventDefault();
+            document.getElementById("message").textContent = "";
+            document.getElementById("erreur").textContent = "";
+            document.getElementById("totaux-simulation-1").innerHTML = "";
+            document.getElementById("totaux-simulation-2").innerHTML = "";
+
+            const groupe1 = document.getElementById("groupe_1").value;
+            const groupe2 = document.getElementById("groupe_2").value;
+
+            if (!groupe1 || !groupe2) {
+                document.getElementById("erreur").textContent = "Veuillez sélectionner deux groupes de remboursement.";
+                return;
+            }
+
+            if (groupe1 === groupe2) {
+                document.getElementById("erreur").textContent = "Veuillez sélectionner deux groupes différents.";
+                return;
+            }
+
+            ajax("GET", `/remboursements/byGroupe?id_groupe=${encodeURIComponent(groupe1)}`, null, (res, status) => {
+                if (status === 200 && res.remboursements) {
+                    afficherRemboursements(res.remboursements, 1);
+                } else {
+                    document.getElementById("erreur").textContent = res.message || "Erreur lors de la récupération du groupe 1.";
+                }
+            });
+
+            ajax("GET", `/remboursements/byGroupe?id_groupe=${encodeURIComponent(groupe2)}`, null, (res, status) => {
+                if (status === 200 && res.remboursements) {
+                    afficherRemboursements(res.remboursements, 2);
+                } else {
+                    document.getElementById("erreur").textContent = res.message || "Erreur lors de la récupération du groupe 2.";
+                }
+            });
+        });
+
+        document.getElementById("validate-1").addEventListener("click", () => validerGroupe(1));
+        document.getElementById("validate-2").addEventListener("click", () => validerGroupe(2));
+
+        window.addEventListener("DOMContentLoaded", () => {
+            chargerGroupes();
+        });
+    </script>
+</body>
+</html>

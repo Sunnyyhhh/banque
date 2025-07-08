@@ -1,0 +1,12 @@
+Début insertion: id_groupe=1, montant=333, duree_mois=5, date_pret=2025-07-08, taux=9.75, assurance=0.1
+Fin insertion: 5 remboursements générés
+Début insertion: id_groupe=1, montant=333, duree_mois=5, date_pret=2025-07-08, taux=9.75, assurance=0.1
+Fin insertion: 5 remboursements générés
+Début insertion: id_groupe=1, montant=200, duree_mois=3, date_pret=2025-07-08, taux=9.75, assurance=0.1
+Fin insertion: 3 remboursements générés
+Début insertion: id_groupe=2, montant=200, duree_mois=6, date_pret=2025-07-08, taux=9.75, assurance=0.1
+Fin insertion: 6 remboursements générés
+Début insertion: id_groupe=1, montant=10000, duree_mois=3, date_pret=2025-07-08, taux=10, assurance=0.3
+Fin insertion: 3 remboursements générés
+Début insertion: id_groupe=1, montant=3000, duree_mois=3, date_pret=2025-07-08, taux=2.8, assurance=0.1
+Fin insertion: 3 remboursements générés

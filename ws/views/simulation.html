@@ -3,143 +3,327 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Créer et lister les prêts</title>
+  <title>Faire une simulation de prêt</title>
   <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-  <link rel="stylesheet" href="../../styles.css" />
-  
+  <style>
+    body, html {
+      margin: 0;
+      padding: 0;
+      font-family: Arial, sans-serif;
+      height: 100vh;
+      display: flex;
+      background: #f4f6f8;
+      overflow: hidden;
+    }
+
+    .sidebar {
+      width: 220px;
+      background-color: #2c3e50;
+      color: white;
+      display: flex;
+      flex-direction: column;
+      padding: 20px;
+      box-sizing: border-box;
+      position: fixed;
+      top: 0;
+      left: 0;
+      bottom: 0;
+    }
+
+    .sidebar a {
+      color: white;
+      text-decoration: none;
+      margin: 10px 0;
+      padding: 10px;
+      border-radius: 4px;
+      transition: background-color 0.3s ease;
+    }
+
+    .sidebar a:hover {
+      background-color: #34495e;
+    }
+
+    .main-content {
+      margin-left: 220px;
+      padding: 30px;
+      flex: 1;
+      height: 100vh;
+      overflow-y: auto;
+      box-sizing: border-box;
+      background: white;
+      display: flex;
+      flex-direction: column;
+      gap: 30px;
+    }
+
+    form {
+      background: #f5f5f5;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 3px 6px rgba(0,0,0,0.1);
+      max-width: 500px;
+      width: 100%;
+    }
+
+    input, select, button {
+      width: 100%;
+      padding: 10px;
+      margin-top: 12px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      font-size: 15px;
+      box-sizing: border-box;
+    }
+
+    button {
+      background-color: #2980b9;
+      color: white;
+      border: none;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+
+    button:hover {
+      background-color: #1f6391;
+    }
+
+    .validate-button {
+      background-color: #27ae60;
+      margin-top: 10px;
+    }
+
+    .validate-button:hover {
+      background-color: #219653;
+    }
+
+    .message { color: green; margin-top: 10px; }
+    .erreur { color: red; margin-top: 10px; }
+
+    table {
+      border-collapse: collapse;
+      width: 100%;
+      box-shadow: 0 3px 6px rgba(0,0,0,0.1);
+      background: white;
+    }
+
+    th, td {
+      padding: 12px 15px;
+      border: 1px solid #ddd;
+      text-align: left;
+    }
+
+    th {
+      background-color: #2980b9;
+      color: white;
+    }
+
+    #totaux-simulation {
+      font-weight: bold;
+      font-size: 16px;
+      margin-top: 20px;
+      background: #ecf0f1;
+      padding: 15px;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+  </style>
 </head>
 <body>
-
   <nav class="sidebar">
     <a href="dashboard.html">Home</a>
     <a href="pret.html">Insérer prêt</a>
     <a href="typePret.html">Types de prêts</a>
     <a href="add_fonds.html">Ajouter des fonds</a>
-    <a href="simulation.html">faire simulation</a>
-    
+    <a href="simulation.html">Faire une simulation</a>
+    <a href="remboursement_groupes.html">Voir remboursements groupés</a>
   </nav>
 
   <main class="main-content">
-  <h2>Faire une simulation</h2>
-  <form id="form-pret">  
+    <h2>Faire une simulation</h2>
+    <form id="form-pret">
       <select name="id_type_pret" id="id_type_pret" required>
-          <option value="">Sélectionner un type de prêt</option>
+        <option value="">Sélectionner un type de prêt</option>
       </select>
-    Montant : <input type="number" id="montant" placeholder="Montant du prêt" required min="1" step="0.01">
-    Date du pret : <input type="date" id="date_pret" required>
-    Duree (en mois) :<input type="number" id="duree_mois" placeholder="Durée (en mois)" required min="1" step="1">
-    <button type="submit">Valider le prêt</button>
-    <div id="message" class="message"></div>
-    <div id="erreur" class="erreur"></div>
-  </form>
+      Montant : <input type="number" id="montant" placeholder="Montant du prêt" required min="1" step="0.01">
+      Date du prêt : <input type="date" id="date_pret" required>
+      Durée (en mois) : <input type="number" id="duree_mois" placeholder="Durée (en mois)" required min="1" step="1">
+      Assurance (%) : <input type="number" id="assurance" placeholder="Assurance (%)" required min="0" step="0.01">
+      ID Groupe : <input type="number" id="id_groupe" placeholder="ID du groupe" required min="1" step="1">
+      <button type="submit">Simuler</button>
+      <div id="message" class="message"></div>
+      <div id="erreur" class="erreur"></div>
+    </form>
 
-
-    <h2>Liste des simulations</h2>
+    <h2>Résultats de la simulation</h2>
     <table id="table-prets" border="1">
-  <thead>
-    <tr>
-      <th>Montant</th>
-      <th>Date du prêt</th>
-      <th>Durée (mois)</th>
-    </tr>
-  </thead>
-  <tbody id="tbody-prets">
-    <!-- lignes générées par JS -->
-  </tbody>
-</table>
-
-  
+      <thead>
+        <tr>
+          <th>Mois</th>
+          <th>Montant mensuel</th>
+          <th>Intérêt</th>
+          <th>Capital remboursé</th>
+          <th>Capital restant</th>
+          <th>Date remboursement</th>
+          <th>Assurance</th>
+        </tr>
+      </thead>
+      <tbody id="tbody-prets"></tbody>
+    </table>
+    <div id="totaux-simulation"></div>
+    <button id="validate-simulation" class="validate-button" style="display: none;">Valider la simulation</button>
   </main>
 
- <script>
-  const apiBase = "http://localhost/t/banque/ws";
+  <script>
+    const apiBase = "http://localhost/t/banque/ws";
+    let simulationData = null;
 
-  function ajax(method, url, data, callback) {
-    const xhr = new XMLHttpRequest();
-    xhr.open(method, apiBase + url, true);
-    xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
-    xhr.onreadystatechange = () => {
-      if (xhr.readyState === 4) {
-        try {
-          const res = JSON.parse(xhr.responseText);
-          callback(res, xhr.status);
-        } catch (e) {
-          console.error("Erreur parsing JSON", xhr.responseText);
+    function ajax(method, url, data, callback) {
+      const xhr = new XMLHttpRequest();
+      xhr.open(method, apiBase + url, true);
+      xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+      xhr.onreadystatechange = () => {
+        if (xhr.readyState === 4) {
+          try {
+            const res = JSON.parse(xhr.responseText);
+            callback(res, xhr.status);
+          } catch (e) {
+            console.error("Erreur parsing JSON", xhr.responseText);
+            document.getElementById("erreur").textContent = "Erreur lors de la communication avec le serveur.";
+          }
         }
-      }
-    };
-    xhr.send(data);
-  }
+      };
+      xhr.send(data);
+    }
 
-  function chargerTypePrets() {
-    ajax("GET", "/GetPret", null, (res, status) => {
-      if (status === 200 && res.typePrets) {
-        const select = document.getElementById("id_type_pret");
-        select.innerHTML = '<option value="">Sélectionner un type de prêt</option>';
-        res.typePrets.forEach(tp => {
-          const option = document.createElement("option");
-          option.value = tp.id;
-          option.dataset.taux = tp.taux;
-          option.textContent = `${tp.nom} (${tp.taux}%)`;
-          select.appendChild(option);
-        });
-      } else {
-        document.getElementById("erreur").textContent = res.message || "Erreur chargement type de prêt.";
+    function chargerTypePrets() {
+      ajax("GET", "/GetPret", null, (res, status) => {
+        if (status === 200 && res.typePrets) {
+          const select = document.getElementById("id_type_pret");
+          select.innerHTML = '<option value="">Sélectionner un type de prêt</option>';
+          res.typePrets.forEach(tp => {
+            const option = document.createElement("option");
+            option.value = tp.id;
+            option.dataset.taux = tp.taux;
+            option.textContent = `${tp.nom} (${tp.taux}%)`;
+            select.appendChild(option);
+          });
+        } else {
+          document.getElementById("erreur").textContent = res.message || "Erreur lors du chargement des types de prêt.";
+        }
+      });
+    }
+
+    function afficherSimulations(remboursements) {
+      const tbody = document.getElementById("tbody-prets");
+      const totalDiv = document.getElementById("totaux-simulation");
+      const validateButton = document.getElementById("validate-simulation");
+      tbody.innerHTML = "";
+
+      let totalInteret = 0;
+      let totalAssurance = 0;
+      let totalMensuel = 0;
+
+      remboursements.forEach(item => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>${item.mois}</td>
+          <td>${item.montant.toFixed(2)} Ar</td>
+          <td>${item.interet.toFixed(2)} Ar</td>
+          <td>${item.principal.toFixed(2)} Ar</td>
+          <td>${item.capital_restant.toFixed(2)} Ar</td>
+          <td>${item.date_remboursement}</td>
+          <td>${item.assurance.toFixed(2)} Ar</td>
+        `;
+        tbody.appendChild(tr);
+
+        totalInteret += parseFloat(item.interet);
+        totalAssurance += parseFloat(item.assurance);
+        totalMensuel += parseFloat(item.montant);
+      });
+
+      const totalPayer = totalMensuel;
+
+      totalDiv.innerHTML = `
+        Total des intérêts : <strong>${totalInteret.toFixed(2)} Ar</strong><br>
+        Total des assurances : <strong>${totalAssurance.toFixed(2)} Ar</strong><br>
+        <span style="color:green;">Total à payer :</span> <strong>${totalPayer.toFixed(2)} Ar</strong>
+      `;
+
+      validateButton.style.display = remboursements.length > 0 ? 'block' : 'none';
+      simulationData = remboursements;
+    }
+
+    function validerSimulation() {
+      if (!simulationData || simulationData.length === 0) {
+        document.getElementById("erreur").textContent = "Aucune simulation à valider.";
+        return;
       }
+
+      const id_type_pret = document.getElementById("id_type_pret").value;
+      const montant = parseFloat(document.getElementById("montant").value);
+      const date_pret = document.getElementById("date_pret").value;
+      const duree_mois = parseInt(document.getElementById("duree_mois").value, 10);
+      const assurance = parseFloat(document.getElementById("assurance").value);
+      const id_groupe = parseInt(document.getElementById("id_groupe").value, 10);
+
+      if (!id_type_pret || isNaN(montant) || montant <= 0 || !date_pret || isNaN(duree_mois) || duree_mois <= 0 || isNaN(assurance) || assurance < 0 || isNaN(id_groupe) || id_groupe <= 0) {
+        document.getElementById("erreur").textContent = "Veuillez vérifier tous les champs, y compris l'ID du groupe.";
+        return;
+      }
+
+      const date_echeance = new Date(date_pret);
+      date_echeance.setMonth(date_echeance.getMonth() + duree_mois);
+      const date_echeance_str = date_echeance.toISOString().split('T')[0];
+
+      const data = `id_client=1&id_type_pret=${encodeURIComponent(id_type_pret)}&montant=${encodeURIComponent(montant)}&date_pret=${encodeURIComponent(date_pret)}&duree_mois=${encodeURIComponent(duree_mois)}&date_echeance=${encodeURIComponent(date_echeance_str)}&assurance=${encodeURIComponent(assurance)}&id_groupe=${encodeURIComponent(id_groupe)}`;
+
+      ajax("POST", "/pret", data, (res, status) => {
+        if (status === 200 && res.id) {
+          document.getElementById("message").textContent = `Simulation validée avec succès (ID prêt: ${res.id}).`;
+          document.getElementById("erreur").textContent = "";
+        } else {
+          document.getElementById("erreur").textContent = res.message || "Erreur lors de la validation de la simulation.";
+        }
+      });
+    }
+
+    document.getElementById("form-pret").addEventListener("submit", function (e) {
+      e.preventDefault();
+      document.getElementById("message").textContent = "";
+      document.getElementById("erreur").textContent = "";
+
+      const id_type_pret = document.getElementById("id_type_pret").value;
+      const montant = parseFloat(document.getElementById("montant").value);
+      const date_pret = document.getElementById("date_pret").value;
+      const duree_mois = parseInt(document.getElementById("duree_mois").value, 10);
+      const assurance = parseFloat(document.getElementById("assurance").value);
+      const id_groupe = parseInt(document.getElementById("id_groupe").value, 10);
+
+      const tauxOption = document.querySelector(`#id_type_pret option:checked`);
+      const taux = parseFloat(tauxOption?.dataset?.taux || 0);
+
+      if (!id_type_pret || isNaN(montant) || montant <= 0 || !date_pret || isNaN(duree_mois) || duree_mois <= 0 || isNaN(taux) || isNaN(assurance) || assurance < 0 || isNaN(id_groupe) || id_groupe <= 0) {
+        document.getElementById("erreur").textContent = "Veuillez remplir tous les champs correctement, y compris l'ID du groupe.";
+        return;
+      }
+
+      const data = `montant=${encodeURIComponent(montant)}&duree_mois=${encodeURIComponent(duree_mois)}&date_pret=${encodeURIComponent(date_pret)}&taux=${encodeURIComponent(taux)}&assurance=${encodeURIComponent(assurance)}&id_groupe=${encodeURIComponent(id_groupe)}`;
+
+      ajax("POST", "/simulationsRemboursement", data, (res, status) => {
+        if (status === 200 && res.remboursements) {
+          afficherSimulations(res.remboursements);
+          document.getElementById("message").textContent = "Simulation effectuée avec succès.";
+        } else {
+          document.getElementById("erreur").textContent = res.message || "Erreur lors de la simulation.";
+        }
+      });
     });
-  }
 
-  function chargerSimulations() {
-    ajax("GET", "/simulations/liste", null, (data, status) => {
-      if (status === 200 && Array.isArray(data)) {
-        const tbody = document.getElementById("tbody-prets");
-        tbody.innerHTML = "";
-        data.forEach(item => {
-          const tr = document.createElement("tr");
-          tr.innerHTML = `
-            <td>${parseFloat(item.montant).toFixed(2)} Ar</td>
-            <td>${item.date_pret}</td>
-            <td>${item.duree_mois}</td>
-          `;
-          tbody.appendChild(tr);
-        });
-      } else {
-        console.error("Erreur chargement simulations", data);
-      }
+    document.getElementById("validate-simulation").addEventListener("click", validerSimulation);
+
+    window.addEventListener("DOMContentLoaded", () => {
+      chargerTypePrets();
     });
-  }
-
-  document.getElementById("form-pret").addEventListener("submit", function (e) {
-    e.preventDefault();
-
-    // ⚠️ TEST : utiliser un id_pret réel, par exemple 12
-    const idPret = 12;
-    const montant = parseFloat(document.getElementById("montant").value);
-    const date_remboursement = new Date().toISOString().slice(0, 10);
-    const interet = montant * 0.1; // Ex : intérêt fixe pour test
-
-    const data = new URLSearchParams();
-    data.append("id_pret", idPret);
-    data.append("montant", montant);
-    data.append("interet", interet);
-    data.append("date_remboursement", date_remboursement);
-
-    ajax("POST", "/simulations", data.toString(), (res, status) => {
-      if (status === 200) {
-        document.getElementById("message").textContent = "Simulation ajoutée avec succès.";
-        chargerSimulations(); // Recharger la liste
-      } else {
-        document.getElementById("erreur").textContent = "Erreur lors de l'ajout.";
-      }
-    });
-  });
-
-  window.addEventListener("DOMContentLoaded", () => {
-    chargerTypePrets();
-    chargerSimulations();
-  });
-</script>
-
-
+  </script>
 </body>
 </html>

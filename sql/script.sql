@@ -45,12 +45,11 @@ CREATE TABLE pret (
 --table remboursement OK
 CREATE TABLE remboursement (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    id_pret INT NOT NULL,
     montant DECIMAL(15,2) NOT NULL CHECK (montant > 0),
     date_remboursement DATE NOT NULL,
     interet DECIMAL(15,2),
     assurance decimal(15,2),
-    FOREIGN KEY (id_pret) REFERENCES pret(id)
+    id_groupe int
 );
 
 INSERT INTO utilisateur (nom, prenom, email, solde, statut, mot_de_passe, dtn) VALUES
