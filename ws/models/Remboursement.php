@@ -16,4 +16,12 @@ class Remboursement {
         ]);
         return $db->lastInsertId();
     }
+
+    public static function getRemboursements($id_pret)
+    {
+        $db = getDB();
+        $stmt = $db->prepare("SELECT * FROM remboursement WHERE id_pret = ?");
+        $stmt->execute([$id_pret]);
+        return $stmt->fetch(PDO::FETCH_ASSOC);        
+    }
 }

@@ -112,11 +112,7 @@
     document.getElementById("erreur").textContent = "Veuillez sélectionner un client.";
     return;
   }
-      const id_client = document.getElementById("id_client").value;
-      if (!id_client) {
-        document.getElementById("erreur").textContent = "Veuillez sélectionner un client.";
-        return;
-      }
+    
 
   const id_type_pret = document.getElementById("id_type_pret").value;
   const montant = parseFloat(document.getElementById("montant").value);
@@ -144,12 +140,6 @@
     return;
   }
 
-  const d = new Date(date_pret);
-  d.setMonth(d.getMonth() + duree_mois);
-  const date_echeance = d.toISOString().split('T')[0];
-  const interet = (montant * taux * duree_mois) / (100 * 12);
-  const date_validation = new Date().toISOString().split('T')[0];
-  const statut = 0;
 
   const data = `id_client=${id_client}&id_type_pret=${id_type_pret}&montant=${montant}&date_pret=${date_pret}&duree_mois=${duree_mois}&date_echeance=${date_echeance}&interet=${interet}&date_validation=${date_validation}&statut=${statut}`;
 
@@ -173,7 +163,7 @@
       document.getElementById("erreur").textContent = res.message || "Erreur lors de l'enregistrement du prêt.";
     }
   });
-}
+
 
 
   function chargerListePrets() {
