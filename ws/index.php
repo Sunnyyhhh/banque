@@ -9,5 +9,7 @@ require 'routes/etablissement_routes.php';
 require 'routes/remboursement_routes.php';
 
 require 'routes/pret_admin_routes.php';
+require 'routes/statistique_routes.php';
 
 Flight::start();
+
