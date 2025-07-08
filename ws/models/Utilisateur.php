@@ -10,6 +10,12 @@ class Utilisateur {
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }
 
+    public static function getAll() {
+        $db = getDB();
+        $stmt = $db->query("SELECT * FROM utilisateur");
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
     public static function getSolde() 
     {
         $db = getDB();

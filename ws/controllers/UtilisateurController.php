@@ -47,4 +47,10 @@ class UtilisateurController {
         }
     }
 
+    public static function getAll() {
+        $clients = Utilisateur::getAll();
+        Flight::json(['utilisateurs' => $clients]);
+        //Flight::json($clients);
+    }
+
 }

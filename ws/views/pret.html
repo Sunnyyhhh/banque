@@ -42,9 +42,11 @@
 
   <h2>Créer un prêt</h2>
   <form id="form-pret">
+    <select name="client" id="id_client" required>
+        <option value="">Sélectionner un client</option>
+    </select>
     <select name="id_type_pret" id="id_type_pret" required>
-      <option value="1" data-taux="3.5">Immobilier (3.5%)</option>
-      <option value="2" data-taux="1.5">Étudiant (1.5%)</option>
+        <option value="">Sélectionner un type de prêt</option>
     </select>
     <input type="number" id="montant" placeholder="Montant du prêt" required min="1" step="0.01">
     <input type="date" id="date_pret" required>
@@ -94,23 +96,49 @@
     }
 
     function ajouterPret(event) {
+  event.preventDefault();
+
+  // Réinitialiser les messages
+  document.getElementById("message").textContent = "";
+  document.getElementById("erreur").textContent = "";
       event.preventDefault();
 
       document.getElementById("message").textContent = "";
       document.getElementById("erreur").textContent = "";
 
+  // ✅ Nouveau : Récupération du client depuis le <select>
+  const id_client = document.getElementById("id_client").value;
+  if (!id_client) {
+    document.getElementById("erreur").textContent = "Veuillez sélectionner un client.";
+    return;
+  }
       const id_client = document.getElementById("id_client").value;
       if (!id_client) {
         document.getElementById("erreur").textContent = "Veuillez sélectionner un client.";
         return;
       }
 
-      const id_type_pret = document.getElementById("id_type_pret").value;
-      const montant = parseFloat(document.getElementById("montant").value);
-      const date_pret = document.getElementById("date_pret").value;
-      const duree_mois = parseInt(document.getElementById("duree_mois").value);
-      const taux = parseFloat(document.querySelector(`#id_type_pret option:checked`).dataset.taux);
+  const id_type_pret = document.getElementById("id_type_pret").value;
+  const montant = parseFloat(document.getElementById("montant").value);
+  const date_pret = document.getElementById("date_pret").value;
+  const duree_mois = parseInt(document.getElementById("duree_mois").value, 10);
 
+  const tauxOption = document.querySelector(`#id_type_pret option:checked`);
+  const taux = parseFloat(tauxOption?.dataset?.taux || 0);
+
+  // Validation
+  if (!id_type_pret || isNaN(montant) || montant <= 0 || !date_pret || isNaN(duree_mois) || duree_mois <= 0 || isNaN(taux)) {
+    document.getElementById("erreur").textContent = "Veuillez remplir tous les champs correctement.";
+    return;
+  }
+
+  // Calculs
+  const d = new Date(date_pret);
+  d.setMonth(d.getMonth() + duree_mois);
+  const date_echeance = d.toISOString().split('T')[0];
+  const interet = (montant * taux * duree_mois) / (100 * 12);
+  const date_validation = new Date().toISOString().split('T')[0];
+  const statut = 0;
   if (!id_type_pret || isNaN(montant) || montant <= 0 || !date_pret || isNaN(duree_mois) || duree_mois <= 0 || isNaN(taux)) {
     document.getElementById("erreur").textContent = "Veuillez remplir tous les champs correctement.";
     return;
@@ -123,7 +151,18 @@
   const date_validation = new Date().toISOString().split('T')[0];
   const statut = 0;
 
-      const data = `id_client=${id_client}&id_type_pret=${id_type_pret}&montant=${montant}&date_pret=${date_pret}&duree_mois=${duree_mois}&date_echeance=${date_echeance}&interet=${interet}&date_validation=${date_validation}&statut=${statut}`;
+  const data = `id_client=${id_client}&id_type_pret=${id_type_pret}&montant=${montant}&date_pret=${date_pret}&duree_mois=${duree_mois}&date_echeance=${date_echeance}&interet=${interet}&date_validation=${date_validation}&statut=${statut}`;
+
+  ajax("POST", "/pret", data, (res, status) => {
+    if (status === 200 && res.message === "Prêt inséré avec succès") {
+      document.getElementById("message").textContent = "✅ Prêt enregistré avec succès.";
+      document.getElementById("form-pret").reset();
+      chargerListePrets(); // Rafraîchit la liste
+    } else {
+      document.getElementById("erreur").textContent = res.message || "Erreur lors de l'enregistrement du prêt.";
+    }
+  });
+}
 
   ajax("POST", "/pret", data, (res, status) => {
     if (status === 200 && res.message === "Prêt inséré avec succès") {
@@ -175,6 +214,54 @@
 
     document.getElementById("form-pret").addEventListener("submit", ajouterPret);
     chargerListePrets();
+
+    function chargerTypePrets() {
+    ajax("GET", "/GetPret", null, (res, status) => {
+        if (status === 200 && res.typePrets) {
+            const select = document.getElementById("id_type_pret");
+            select.innerHTML = '<option value="">Sélectionner un type de prêt</option>';
+            res.typePrets.forEach(tp => {
+                const option = document.createElement("option");
+                option.value = tp.id;
+                option.dataset.taux = tp.taux;
+                option.textContent = `${tp.nom} (${tp.taux}%)`;
+                select.appendChild(option);
+            });
+        } else {
+            document.getElementById("erreur").textContent = res.message || "Erreur lors du chargement des types de prêt.";
+        }
+    });
+}
+
+
+
+
+    function chargerClients() {
+            ajax("GET", "/clients", null, (res, status) => {
+                if (status === 200 && res.utilisateurs) {
+                    const selectClient = document.getElementById("id_client");
+                    selectClient.innerHTML = '<option value="">Sélectionner un client</option>';
+                    res.utilisateurs.forEach(client => {
+                        const option = document.createElement("option");
+                        option.value = client.id_utilisateur;
+                        option.textContent = `${client.prenom} ${client.nom} (${client.email})`;
+                        selectClient.appendChild(option);
+                    });
+                } else {
+                    document.getElementById("erreur").textContent = res.message || "Erreur lors du chargement des clients.";
+                }
+            });
+    }
+    window.addEventListener("DOMContentLoaded", () => {
+    chargerClients();
+    });
+
+    window.addEventListener("DOMContentLoaded", () => {
+    chargerTypePrets();
+    chargerListePrets(); // ta fonction existante
+});
+
+
   </script>
 
 </body>
