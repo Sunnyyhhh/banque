@@ -23,6 +23,7 @@ class PretController {
     public static function approuverPret() {
         try {
             $id = Flight::request()->data->id;
+            $date=Flight::request()->data->date_validation;
             if (!$id) {
                 Flight::json(['message' => 'ID manquant'], 400);
                 return;
@@ -37,12 +38,10 @@ class PretController {
                 return;
             }
 
-            $montant = $pret['montant'];
-            Etablissement::addFonds(0, -$montant); 
-
-            Pret::approuverPret($id);
-
-            Pret::genererRemboursements($id);
+            //$montant = $pret['montant'];
+            //Etablissement::addFonds(0, -$montant); 
+            Pret::approuverPret($id,$date);
+            //Pret::genererRemboursements($id);
 
             Flight::json(['message' => 'Prêt approuvé avec génération des remboursements'], 200);
         } catch (Throwable $e) {

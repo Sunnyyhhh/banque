@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!--<!DOCTYPE html>
 <html lang="fr">
 <head>
   <meta charset="UTF-8" />
@@ -161,8 +161,6 @@
     <div id="erreur" class="erreur"></div>
   </form>
 
-  <a href="listeValides.html">Liste des prets valides</a>
-
     <h2>Liste des Prêts</h2>
     <table id="table-prets">
       <thead>
@@ -239,7 +237,7 @@
   d.setMonth(d.getMonth() + duree_mois);
   const date_echeance = d.toISOString().split('T')[0];
   const interet = (montant * taux * duree_mois) / (100 * 12);
-  const date_validation = new Date().toISOString().split('T')[0];
+  const date_validation = null;
   const statut = 0;
   if (!id_type_pret || isNaN(montant) || montant <= 0 || !date_pret || isNaN(duree_mois) || duree_mois <= 0 || isNaN(taux)) {
     document.getElementById("erreur").textContent = "Veuillez remplir tous les champs correctement.";
@@ -259,7 +257,6 @@
   });
 }
 
-
   function chargerListePrets() {
     $.get(apiBase + "/pret_admin", function(data) {
       let rows = '';
@@ -273,9 +270,10 @@
             <td>${p.duree_mois}</td>
             <td>${p.date_echeance}</td>
             <td>${p.type_pret}</td>
-            <td>
-                  <button onclick="approuverPret(${p.id}, ${p.montant})">Valider</button>
-            </td>
+            <td><form onsubmit="approuverPret(${p.id}, ${p.montant})">
+                  <input type="date" name="date_validation" required>
+                  <button type="submit">Valider</button>
+            </form></td>
           </tr>`;
       });
       $('#table-prets tbody').html(rows);
@@ -344,5 +342,346 @@
 
   </script>
 
+</body>
+</html>-->
+
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Créer et lister les prêts</title>
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <style>
+    /* Reset & base */
+    body, html {
+      margin: 0;
+      padding: 0;
+      font-family: Arial, sans-serif;
+      height: 100vh;
+      display: flex;
+      background: #f4f6f8;
+      overflow: hidden;
+    }
+
+    /* Sidebar */
+    .sidebar {
+      width: 220px;
+      background-color: #2c3e50;
+      color: white;
+      display: flex;
+      flex-direction: column;
+      padding: 20px;
+      box-sizing: border-box;
+      position: fixed;
+      top: 0;
+      left: 0;
+      bottom: 0;
+    }
+
+    .sidebar a {
+      color: white;
+      text-decoration: none;
+      margin: 10px 0;
+      padding: 10px;
+      border-radius: 4px;
+      transition: background-color 0.3s ease;
+    }
+
+    .sidebar a:hover {
+      background-color: #34495e;
+    }
+
+    /* Contenu principal */
+    .main-content {
+      margin-left: 220px;
+      padding: 30px;
+      flex: 1;
+      height: 100vh;
+      overflow-y: auto;
+      box-sizing: border-box;
+      background: white;
+      display: flex;
+      flex-direction: column;
+      gap: 30px;
+    }
+
+    /* Formulaire stylisé */
+    form {
+      background: #f5f5f5;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 3px 6px rgba(0,0,0,0.1);
+      max-width: 500px;
+      width: 100%;
+    }
+
+    input, select, button {
+      width: 100%;
+      padding: 10px;
+      margin-top: 12px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      font-size: 15px;
+      box-sizing: border-box;
+    }
+
+    button {
+      background-color: #2980b9;
+      color: white;
+      border: none;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+
+    button:hover {
+      background-color: #1f6391;
+    }
+
+    /* Messages */
+    .message { color: green; margin-top: 10px; }
+    .erreur { color: red; margin-top: 10px; }
+
+    /* Table stylée */
+    table {
+      border-collapse: collapse;
+      width: 100%;
+      box-shadow: 0 3px 6px rgba(0,0,0,0.1);
+      background: white;
+    }
+
+    th, td {
+      padding: 12px 15px;
+      border: 1px solid #ddd;
+      text-align: left;
+    }
+
+    th {
+      background-color: #2980b9;
+      color: white;
+    }
+
+    td button {
+      padding: 6px 12px;
+      background-color: #27ae60;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    td button:hover {
+      background-color: #1e874b;
+    }
+
+    h2 {
+      color: #2c3e50;
+      margin-bottom: 10px;
+    }
+
+    /* Style pour le champ de date dans le tableau */
+    td input[type="date"] {
+      width: 150px;
+      margin-right: 10px;
+    }
+  </style>
+</head>
+<body>
+  <nav class="sidebar">
+    <a href="dashboard.html">Home</a>
+    <a href="pret.html">Insérer prêt</a>
+    <a href="typePret.html">Types de prêts</a>
+    <a href="add_fonds.html">Ajouter des fonds</a>
+  </nav>
+
+  <main class="main-content">
+    <h2>Créer un prêt</h2>
+    <form id="form-pret">
+      <select name="client" id="id_client" required>
+        <option value="">Sélectionner un client</option>
+      </select>
+      <select name="id_type_pret" id="id_type_pret" required>
+        <option value="">Sélectionner un type de prêt</option>
+      </select>
+      Montant : <input type="number" id="montant" placeholder="Montant du prêt" required min="1" step="0.01">
+      Date du prêt : <input type="date" id="date_pret" required>
+      Durée (en mois) : <input type="number" id="duree_mois" placeholder="Durée (en mois)" required min="1" step="1">
+      Assurance (%) : <input type="number" id="assurance" placeholder="Assurance (%)" required min="0" step="0.01">
+      <button type="submit">Valider le prêt</button>
+      <div id="message" class="message"></div>
+      <div id="erreur" class="erreur"></div>
+    </form>
+
+    <h2>Liste des Prêts</h2>
+    <table id="table-prets">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Client</th>
+          <th>Montant</th>
+          <th>Date prêt</th>
+          <th>Durée (mois)</th>
+          <th>Date échéance</th>
+          <th>Type</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </main>
+
+  <script>
+    const apiBase = "http://localhost/t/banque/ws";
+
+    function ajax(method, url, data, callback) {
+      const xhr = new XMLHttpRequest();
+      xhr.open(method, apiBase + url, true);
+      xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+      xhr.onreadystatechange = () => {
+        if (xhr.readyState === 4) {
+          try {
+            const res = JSON.parse(xhr.responseText);
+            callback(res, xhr.status);
+          } catch (e) {
+            console.error("Erreur parsing JSON", xhr.responseText);
+          }
+        }
+      };
+      xhr.send(data);
+    }
+
+    function ajouterPret(event) {
+      event.preventDefault();
+      document.getElementById("message").textContent = "";
+      document.getElementById("erreur").textContent = "";
+
+      const id_client = document.getElementById("id_client").value;
+      if (!id_client) {
+        document.getElementById("erreur").textContent = "Veuillez sélectionner un client.";
+        return;
+      }
+
+      const id_type_pret = document.getElementById("id_type_pret").value;
+      const montant = parseFloat(document.getElementById("montant").value);
+      const date_pret = document.getElementById("date_pret").value;
+      const duree_mois = parseInt(document.getElementById("duree_mois").value, 10);
+      const assurance = parseFloat(document.getElementById("assurance").value);
+
+      const tauxOption = document.querySelector(`#id_type_pret option:checked`);
+      const taux = parseFloat(tauxOption?.dataset?.taux || 0);
+
+      if (!id_type_pret || isNaN(montant) || montant <= 0 || !date_pret || isNaN(duree_mois) || duree_mois <= 0 || isNaN(taux)) {
+        document.getElementById("erreur").textContent = "Veuillez remplir tous les champs correctement.";
+        return;
+      }
+
+      const d = new Date(date_pret);
+      d.setMonth(d.getMonth() + duree_mois);
+      const date_echeance = d.toISOString().split('T')[0];
+      const interet = (montant * taux * duree_mois) / (100 * 12);
+      const date_validation = null;
+      const statut = 0;
+
+      const data = `id_client=${id_client}&id_type_pret=${id_type_pret}&montant=${montant}&date_pret=${date_pret}&duree_mois=${duree_mois}&date_echeance=${date_echeance}&interet=${interet}&date_validation=${date_validation}&statut=${statut}&assurance=${assurance}`;
+
+      ajax("POST", "/pret", data, (res, status) => {
+        if (status === 200 && res.message === "Prêt inséré avec succès") {
+          document.getElementById("message").textContent = "✅ Prêt enregistré avec succès.";
+          document.getElementById("form-pret").reset();
+          chargerListePrets();
+        } else {
+          document.getElementById("erreur").textContent = res.message || "Erreur lors de l'enregistrement du prêt.";
+        }
+      });
+    }
+
+    function chargerListePrets() {
+      $.get(apiBase + "/pret_admin", function(data) {
+        let rows = '';
+        data.forEach(p => {
+          rows += `
+            <tr>
+              <td>${p.id}</td>
+              <td>${p.client_nom} ${p.client_prenom}</td>
+              <td>${p.montant}</td>
+              <td>${p.date_pret}</td>
+              <td>${p.duree_mois}</td>
+              <td>${p.date_echeance}</td>
+              <td>${p.type_pret}</td>
+              <td>
+                <form onsubmit="approuverPret(event, ${p.id}, ${p.montant})">
+                  <p>Valider le pret</p>
+                  <input type="date" name="date_validation" required>
+                  <button type="submit">Valider</button>
+                </form>
+              </td>
+            </tr>`;
+        });
+        $('#table-prets tbody').html(rows);
+      });
+    }
+
+    function approuverPret(event, idPret, montant) {
+      event.preventDefault();
+      const date_validation = event.target.querySelector('input[name="date_validation"]').value;
+      if (!date_validation) {
+        alert("Veuillez sélectionner une date de validation.");
+        return;
+      }
+      const data = `id=${idPret}&date_validation=${date_validation}`;
+
+      ajax("POST", "/pret/approuver", data, (res, status) => {
+        if (status === 200 && res.message === "Prêt inséré avec succès") {
+          alert("✅ Prêt approuvé avec succès.");
+          chargerListePrets();
+        } else {
+          alert(res.message || "❌ Erreur lors de l'approbation du prêt.");
+        }
+      });
+    }
+
+    document.getElementById("form-pret").addEventListener("submit", ajouterPret);
+
+    function chargerTypePrets() {
+      ajax("GET", "/GetPret", null, (res, status) => {
+        if (status === 200 && res.typePrets) {
+          const select = document.getElementById("id_type_pret");
+          select.innerHTML = '<option value="">Sélectionner un type de prêt</option>';
+          res.typePrets.forEach(tp => {
+            const option = document.createElement("option");
+            option.value = tp.id;
+            option.dataset.taux = tp.taux;
+            option.textContent = `${tp.nom} (${tp.taux}%)`;
+            select.appendChild(option);
+          });
+        } else {
+          document.getElementById("erreur").textContent = res.message || "Erreur lors du chargement des types de prêt.";
+        }
+      });
+    }
+
+    function chargerClients() {
+      ajax("GET", "/clients", null, (res, status) => {
+        if (status === 200 && res.utilisateurs) {
+          const selectClient = document.getElementById("id_client");
+          selectClient.innerHTML = '<option value="">Sélectionner un client</option>';
+          res.utilisateurs.forEach(client => {
+            const option = document.createElement("option");
+            option.value = client.id_utilisateur;
+            option.textContent = `${client.prenom} ${client.nom} (${client.email})`;
+            selectClient.appendChild(option);
+          });
+        } else {
+          document.getElementById("erreur").textContent = res.message || "Erreur lors du chargement des clients.";
+        }
+      });
+    }
+
+    window.addEventListener("DOMContentLoaded", () => {
+      chargerClients();
+      chargerTypePrets();
+      chargerListePrets();
+    });
+  </script>
 </body>
 </html>
