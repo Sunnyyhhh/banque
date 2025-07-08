@@ -29,10 +29,10 @@ class Pret {
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }
 
-    public static function approuverPret($id) {
+    public static function approuverPret($id,$date) {
         $db = getDB();
-        $stmt = $db->prepare("UPDATE pret SET statut = 1, date_validation = CURRENT_DATE WHERE id = ?");
-        $stmt->execute([$id]);
+        $stmt = $db->prepare("UPDATE pret SET statut = 1, date_validation = ? WHERE id = ?");
+        $stmt->execute([$date,$id]);
     }
 
     public static function getPretsValide()
