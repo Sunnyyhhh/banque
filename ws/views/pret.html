@@ -43,14 +43,14 @@
   <h2>Créer un prêt</h2>
   <form id="form-pret">
     <select name="client" id="id_client" required>
-        <option value="">Sélectionner un client</option>
+        Selectionner un client :<option value="">Sélectionner un client</option>
     </select>
     <select name="id_type_pret" id="id_type_pret" required>
-        <option value="">Sélectionner un type de prêt</option>
+        Selectionner un type de pret :<option value="">Sélectionner un type de prêt</option>
     </select>
-    <input type="number" id="montant" placeholder="Montant du prêt" required min="1" step="0.01">
-    <input type="date" id="date_pret" required>
-    <input type="number" id="duree_mois" placeholder="Durée (en mois)" required min="1" step="1">
+    Montant : <input type="number" id="montant" placeholder="Montant du prêt" required min="1" step="0.01">
+    Date du pret : <input type="date" id="date_pret" required>
+    Duree (en mois) :<input type="number" id="duree_mois" placeholder="Durée (en mois)" required min="1" step="1">
     <button type="submit">Valider le prêt</button>
     <div id="message" class="message"></div>
     <div id="erreur" class="erreur"></div>
@@ -113,7 +113,6 @@
     return;
   }
     
-
   const id_type_pret = document.getElementById("id_type_pret").value;
   const montant = parseFloat(document.getElementById("montant").value);
   const date_pret = document.getElementById("date_pret").value;
@@ -140,19 +139,7 @@
     return;
   }
 
-
   const data = `id_client=${id_client}&id_type_pret=${id_type_pret}&montant=${montant}&date_pret=${date_pret}&duree_mois=${duree_mois}&date_echeance=${date_echeance}&interet=${interet}&date_validation=${date_validation}&statut=${statut}`;
-
-  ajax("POST", "/pret", data, (res, status) => {
-    if (status === 200 && res.message === "Prêt inséré avec succès") {
-      document.getElementById("message").textContent = "✅ Prêt enregistré avec succès.";
-      document.getElementById("form-pret").reset();
-      chargerListePrets(); // Rafraîchit la liste
-    } else {
-      document.getElementById("erreur").textContent = res.message || "Erreur lors de l'enregistrement du prêt.";
-    }
-  });
-}
 
   ajax("POST", "/pret", data, (res, status) => {
     if (status === 200 && res.message === "Prêt inséré avec succès") {
@@ -163,7 +150,7 @@
       document.getElementById("erreur").textContent = res.message || "Erreur lors de l'enregistrement du prêt.";
     }
   });
-
+}
 
 
   function chargerListePrets() {
@@ -190,7 +177,6 @@
 
   function approuverPret(idPret,montant) {
     const data = `id=${idPret}`;
-
 
     ajax("POST", "/pret/approuver", data, (res, status) => {
       if (status === 200 && res.message === "Prêt inséré avec succès") {
@@ -223,9 +209,6 @@
     });
 }
 
-
-
-
     function chargerClients() {
             ajax("GET", "/clients", null, (res, status) => {
                 if (status === 200 && res.utilisateurs) {
@@ -248,7 +231,7 @@
 
     window.addEventListener("DOMContentLoaded", () => {
     chargerTypePrets();
-    chargerListePrets(); // ta fonction existante
+    chargerListePrets();
 });
 
 

@@ -21,36 +21,35 @@ class PretController {
     }
 
     public static function approuverPret() {
-    try {
-        $id = Flight::request()->data->id;
-        if (!$id) {
-            Flight::json(['message' => 'ID manquant'], 400);
-            return;
+        try {
+            $id = Flight::request()->data->id;
+            if (!$id) {
+                Flight::json(['message' => 'ID manquant'], 400);
+                return;
+            }
+
+            $db = getDB();
+            $stmt = $db->prepare("SELECT montant FROM pret WHERE id = ?");
+            $stmt->execute([$id]);
+            $pret = $stmt->fetch(PDO::FETCH_ASSOC);
+            if (!$pret) {
+                Flight::json(['message' => 'Prêt introuvable'], 404);
+                return;
+            }
+
+            $montant = $pret['montant'];
+            Etablissement::addFonds(0, -$montant); 
+
+            Pret::approuverPret($id);
+
+            Pret::genererRemboursements($id);
+
+            Flight::json(['message' => 'Prêt approuvé avec génération des remboursements'], 200);
+        } catch (Throwable $e) {
+            Flight::json(['message' => 'Erreur: ' . $e->getMessage()], 500);
         }
-
-        $db = getDB();
-        $stmt = $db->prepare("SELECT montant FROM pret WHERE id = ?");
-        $stmt->execute([$id]);
-        $pret = $stmt->fetch(PDO::FETCH_ASSOC);
-        if (!$pret) {
-            Flight::json(['message' => 'Prêt introuvable'], 404);
-            return;
-        }
-
-        $montant = $pret['montant'];
-        Etablissement::addFonds(0, -$montant); 
-
-        Pret::approuverPret($id);
-
-        Pret::genererRemboursements($id);
-
-        Flight::json(['message' => 'Prêt approuvé avec génération des remboursements'], 200);
-    } catch (Throwable $e) {
-        Flight::json(['message' => 'Erreur: ' . $e->getMessage()], 500);
     }
-}
-
-
+    
     public static function getPretsValide() {
         try {
             $prets = Pret::getPretsValide();

@@ -43,44 +43,6 @@ class Pret {
         return $stmt->fetchAll(PDO::FETCH_ASSOC); 
     }
 
-    /*public static function genererRemboursements($id_pret) {
-    $db = getDB();
-
-    // 1. Récupérer le prêt
-    $stmt = $db->prepare("SELECT montant, interet, duree_mois, date_pret FROM pret WHERE id = ?");
-    $stmt->execute([$id_pret]);
-    $pret = $stmt->fetch(PDO::FETCH_ASSOC);
-
-    if (!$pret) {
-        throw new Exception("Prêt introuvable");
-    }
-
-    $C = $pret['montant'];
-    $totalInteret = $pret['interet'];
-    $n = $pret['duree_mois'];
-    $i = ($totalInteret * 12) / ($C * $n); // taux mensuel
-    $A = ($C * $i) / (1 - pow(1 + $i, -$n));
-
-    $interetMensuel = $totalInteret / $n;
-    $date = new DateTime($pret['date_pret']);
-
-    // 2. Insertion dans la table remboursement
-    $stmtInsert = $db->prepare("INSERT INTO remboursement (id_pret, montant, interet, date_remboursement) VALUES (?, ?, ?, ?)");
-
-    for ($k = 0; $k < $n; $k++) {
-        $dateStr = $date->format('Y-m-d');
-        $stmtInsert->execute([
-            $id_pret,
-            round($A, 2),            // montant mensuel total
-            round($interetMensuel, 2), // intérêt mensuel
-            $dateStr
-        ]);
-        $date->modify('+1 month');
-    }
-
-    return true;
-}*/
-
 /*public static function genererRemboursements($id_pret) {
     $db = getDB();
 
