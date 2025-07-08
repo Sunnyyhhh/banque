@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Créer et lister les prêts</title>
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <link rel="stylesheet" href="../../styles.css" />
+  
+</head>
+<body>
+
+  <nav class="sidebar">
+    <a href="dashboard.html">Home</a>
+    <a href="pret.html">Insérer prêt</a>
+    <a href="typePret.html">Types de prêts</a>
+    <a href="add_fonds.html">Ajouter des fonds</a>
+    <a href="simulation.html">faire simulation</a>
+    
+  </nav>
+
+  <main class="main-content">
+  <h2>Faire une simulation</h2>
+  <form id="form-pret">  
+      <select name="id_type_pret" id="id_type_pret" required>
+          <option value="">Sélectionner un type de prêt</option>
+      </select>
+    Montant : <input type="number" id="montant" placeholder="Montant du prêt" required min="1" step="0.01">
+    Date du pret : <input type="date" id="date_pret" required>
+    Duree (en mois) :<input type="number" id="duree_mois" placeholder="Durée (en mois)" required min="1" step="1">
+    <button type="submit">Valider le prêt</button>
+    <div id="message" class="message"></div>
+    <div id="erreur" class="erreur"></div>
+  </form>
+
+
+    <h2>Liste des simulations</h2>
+    <table id="table-prets" border="1">
+  <thead>
+    <tr>
+      <th>Montant</th>
+      <th>Date du prêt</th>
+      <th>Durée (mois)</th>
+    </tr>
+  </thead>
+  <tbody id="tbody-prets">
+    <!-- lignes générées par JS -->
+  </tbody>
+</table>
+
+  
+  </main>
+
+ <script>
+  const apiBase = "http://localhost/t/banque/ws";
+
+  function ajax(method, url, data, callback) {
+    const xhr = new XMLHttpRequest();
+    xhr.open(method, apiBase + url, true);
+    xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+    xhr.onreadystatechange = () => {
+      if (xhr.readyState === 4) {
+        try {
+          const res = JSON.parse(xhr.responseText);
+          callback(res, xhr.status);
+        } catch (e) {
+          console.error("Erreur parsing JSON", xhr.responseText);
+        }
+      }
+    };
+    xhr.send(data);
+  }
+
+  function chargerTypePrets() {
+    ajax("GET", "/GetPret", null, (res, status) => {
+      if (status === 200 && res.typePrets) {
+        const select = document.getElementById("id_type_pret");
+        select.innerHTML = '<option value="">Sélectionner un type de prêt</option>';
+        res.typePrets.forEach(tp => {
+          const option = document.createElement("option");
+          option.value = tp.id;
+          option.dataset.taux = tp.taux;
+          option.textContent = `${tp.nom} (${tp.taux}%)`;
+          select.appendChild(option);
+        });
+      } else {
+        document.getElementById("erreur").textContent = res.message || "Erreur chargement type de prêt.";
+      }
+    });
+  }
+
+  function chargerSimulations() {
+    ajax("GET", "/simulations/liste", null, (data, status) => {
+      if (status === 200 && Array.isArray(data)) {
+        const tbody = document.getElementById("tbody-prets");
+        tbody.innerHTML = "";
+        data.forEach(item => {
+          const tr = document.createElement("tr");
+          tr.innerHTML = `
+            <td>${parseFloat(item.montant).toFixed(2)} Ar</td>
+            <td>${item.date_pret}</td>
+            <td>${item.duree_mois}</td>
+          `;
+          tbody.appendChild(tr);
+        });
+      } else {
+        console.error("Erreur chargement simulations", data);
+      }
+    });
+  }
+
+  document.getElementById("form-pret").addEventListener("submit", function (e) {
+    e.preventDefault();
+
+    // ⚠️ TEST : utiliser un id_pret réel, par exemple 12
+    const idPret = 12;
+    const montant = parseFloat(document.getElementById("montant").value);
+    const date_remboursement = new Date().toISOString().slice(0, 10);
+    const interet = montant * 0.1; // Ex : intérêt fixe pour test
+
+    const data = new URLSearchParams();
+    data.append("id_pret", idPret);
+    data.append("montant", montant);
+    data.append("interet", interet);
+    data.append("date_remboursement", date_remboursement);
+
+    ajax("POST", "/simulations", data.toString(), (res, status) => {
+      if (status === 200) {
+        document.getElementById("message").textContent = "Simulation ajoutée avec succès.";
+        chargerSimulations(); // Recharger la liste
+      } else {
+        document.getElementById("erreur").textContent = "Erreur lors de l'ajout.";
+      }
+    });
+  });
+
+  window.addEventListener("DOMContentLoaded", () => {
+    chargerTypePrets();
+    chargerSimulations();
+  });
+</script>
+
+
+</body>
+</html>
