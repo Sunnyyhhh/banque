@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!--<!DOCTYPE html>
 <html lang="fr">
 <h2>Prêts valides</h2>
 <table id="table-valides" border="1">
@@ -112,6 +112,7 @@
           console.log("Traitement remboursement:", r);
           const montant = parseFloat(r.montant) || 0;
           const interet = parseFloat(r.interet) || 0;
+      
           totalMontant += montant;
           totalInteret += interet;
           table += `
@@ -156,4 +157,179 @@
     console.log("Page chargée, lancement de chargerPretsValides");
     chargerPretsValides();
   };
+</script>-->
+
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Liste des prêts validés</title>
+</head>
+<body>
+<h2>Prêts valides</h2>
+<table id="table-valides" border="1">
+  <thead>
+    <tr>
+      <th>ID</th>
+      <th>Montant</th>
+      <th>Date prêt</th>
+      <th>Durée</th>
+      <th>Date échéance</th>
+      <th>Action</th>
+    </tr>
+  </thead>
+  <tbody></tbody>
+</table>
+<div id="remboursements-details" style="margin-top: 20px;"></div>
+
+<script>
+  const apiBase = "http://localhost/t/banque/ws";
+
+  function ajax(method, url, data, callback) {
+    const xhr = new XMLHttpRequest();
+    xhr.open(method, apiBase + url, true);
+    xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+    xhr.onreadystatechange = () => {
+      if (xhr.readyState === 4) {
+        console.log(`Requête ${method} ${url} - Statut: ${xhr.status}`);
+        console.log("Réponse brute:", xhr.responseText);
+        try {
+          const res = JSON.parse(xhr.responseText);
+          callback(res, xhr.status);
+        } catch (e) {
+          console.error("Erreur parsing JSON:", xhr.responseText, e);
+          callback({ error: "Réponse invalide du serveur" }, xhr.status);
+        }
+      }
+    };
+    xhr.send(data);
+  }
+
+  function chargerPretsValides() {
+    ajax("GET", "/pret/valides", null, (data, status) => {
+      console.log("Statut API /pret/valides:", status);
+      console.log("Données reçues:", data);
+      if (status === 200) {
+        const tbody = document.querySelector("#table-valides tbody");
+        if (!tbody) {
+          console.error("Erreur : #table-valides tbody non trouvé dans le DOM");
+          alert("Erreur : Impossible de trouver le tableau des prêts valides.");
+          return;
+        }
+        let rows = "";
+        if (Array.isArray(data) && data.length > 0) {
+          data.forEach(p => {
+            console.log("Traitement du prêt:", p);
+            rows += `
+              <tr>
+                <td><a href="#" onclick="afficherRemboursements(${p.id}, ${p.id_type_pret}, ${p.montant}); return false;">${p.id}</a></td>
+                <td>${p.montant}</td>
+                <td>${p.date_pret}</td>
+                <td>${p.duree_mois} mois</td>
+                <td>${p.date_echeance}</td>
+                <td>
+                  <form onsubmit="rembourserPret(event, ${p.id}, ${p.id_type_pret})">
+                    <input type="hidden" name="id_type_pret" value="${p.id_type_pret}">
+                    <button type="submit">Rembourser</button>
+                  </form>
+                </td>
+              </tr>
+            `;
+          });
+          tbody.innerHTML = rows;
+          console.log("Tableau mis à jour avec", data.length, "prêts");
+        } else {
+          tbody.innerHTML = "<tr><td colspan='6'>Aucun prêt valide trouvé.</td></tr>";
+          console.log("Aucun prêt valide à afficher");
+        }
+      } else {
+        console.error("Erreur API:", data);
+        alert("❌ Erreur lors du chargement des prêts valides : " + (data.message || "Erreur inconnue"));
+      }
+    });
+  }
+
+  function afficherRemboursements(idPret, idTypePret, montantInitial) {
+    console.log("Appel afficherRemboursements pour idPret:", idPret, "idTypePret:", idTypePret, "montantInitial:", montantInitial);
+    // Récupérer le taux d'assurance depuis type_pret
+    ajax("GET", `/type_pret/${idTypePret}`, null, (typePretData, typePretStatus) => {
+      console.log("Réponse API /type_pret:", typePretData, typePretStatus);
+      const assurance = typePretStatus === 200 && typePretData.assurance ? parseFloat(typePretData.assurance) / 100 : 0.01; // Fallback à 1%
+      const montantInitialAssurance = parseFloat(montantInitial) * assurance; // Calcul de montant initial * assurance
+      // Récupérer les remboursements
+      ajax("POST", `/remboursement/listeById/${idPret}`, null, (data, status) => {
+        console.log("Réponse API /remboursement/listeById:", data, status);
+        const detailsDiv = document.getElementById("remboursements-details");
+        if (!detailsDiv) {
+          console.error("Erreur : #remboursements-details non trouvé dans le DOM");
+          return;
+        }
+        if (status === 200 && Array.isArray(data) && data.length > 0) {
+          let totalMontant = 0;
+          let totalInteret = 0;
+          let table = `
+            <h3>Remboursements pour le prêt ${idPret}</h3>
+            <table border="1">
+              <thead>
+                <tr>
+                  <th>ID Remboursement</th>
+                  <th>Montant</th>
+                  <th>Intérêt</th>
+                  <th>Date de remboursement</th>
+                </tr>
+              </thead>
+              <tbody>
+          `;
+          data.forEach(r => {
+            console.log("Traitement remboursement:", r);
+            const montant = parseFloat(r.montant) || 0;
+            const interet = parseFloat(r.interet) || 0;
+            totalMontant += montant;
+            totalInteret += interet;
+            table += `
+              <tr>
+                <td>${r.id}</td>
+                <td>${montant.toFixed(2)}</td>
+                <td>${interet ? interet.toFixed(2) : 'N/A'}</td>
+                <td>${r.date_remboursement}</td>
+              </tr>
+            `;
+          });
+          table += `
+              </tbody>
+            </table>
+            <p><strong>Somme totale à rembourser : </strong>${(totalMontant + totalInteret).toFixed(2)}</p>
+            <p><strong>Intérêt total : </strong>${totalInteret.toFixed(2)}</p>
+            <p><strong>Montant initial × Assurance : </strong>${montantInitialAssurance.toFixed(2)}</p>
+          `;
+          detailsDiv.innerHTML = table;
+          console.log("Tableau des remboursements mis à jour avec", data.length, "lignes");
+        } else {
+          detailsDiv.innerHTML = `<p>${data.error || `Aucun remboursement trouvé pour le prêt ${idPret}.`}</p>`;
+          console.log("Aucun remboursement ou erreur:", data);
+        }
+      });
+    });
+  }
+
+  function rembourserPret(event, idPret, idTypePret) {
+    event.preventDefault();
+    const data = `id=${idPret}&id_type_pret=${idTypePret}`;
+    ajax("POST", "/pret/rembourser", data, (res, status) => {
+      if (status === 200 && res.message) {
+        alert("✅ " + res.message);
+        chargerPretsValides();
+        document.getElementById("remboursements-details").innerHTML = "";
+      } else {
+        alert(res.message || "Erreur lors du remboursement.");
+      }
+    });
+  }
+
+  window.onload = () => {
+    console.log("Page chargée, lancement de chargerPretsValides");
+    chargerPretsValides();
+  };
 </script>
+</body>
+</html>

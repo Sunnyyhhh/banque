@@ -159,6 +159,24 @@
       <div id="message" class="message"></div>
       <div id="erreur" class="erreur"></div>
     </form>
+  <h2>Créer un prêt</h2>
+  <form id="form-pret">
+    <select name="client" id="id_client" required>
+        Selectionner un client :<option value="">Sélectionner un client</option>
+    </select>
+    <select name="id_type_pret" id="id_type_pret" required>
+        Selectionner un type de pret :<option value="">Sélectionner un type de prêt</option>
+    </select>
+    Montant : <input type="number" id="montant" placeholder="Montant du prêt" required min="1" step="0.01">
+    Date du pret : <input type="date" id="date_pret" required>
+    Duree (en mois) :<input type="number" id="duree_mois" placeholder="Durée (en mois)" required min="1" step="1">
+    Assurance (%) : <input type="number" id="assurance" placeholder="Assurance (%)" required min="0" step="0.01">
+    <button type="submit">Valider le prêt</button>
+    <div id="message" class="message"></div>
+    <div id="erreur" class="erreur"></div>
+  </form>
+
+  <a href="listeValides.html">Liste des prets valides</a>
 
     <h2>Liste des Prêts</h2>
     <table id="table-prets">
@@ -198,13 +216,13 @@
       xhr.send(data);
     }
 
-    function ajouterPret(event) {
+  function ajouterPret(event) {
   event.preventDefault();
 
   // Réinitialiser les messages
   document.getElementById("message").textContent = "";
   document.getElementById("erreur").textContent = "";
-      event.preventDefault();
+    event.preventDefault();
 
       document.getElementById("message").textContent = "";
       document.getElementById("erreur").textContent = "";
@@ -220,6 +238,7 @@
   const montant = parseFloat(document.getElementById("montant").value);
   const date_pret = document.getElementById("date_pret").value;
   const duree_mois = parseInt(document.getElementById("duree_mois").value, 10);
+  const assurance=parseFloat(document.getElementById("assurance").value);
 
   const tauxOption = document.querySelector(`#id_type_pret option:checked`);
   const taux = parseFloat(tauxOption?.dataset?.taux || 0);
@@ -242,7 +261,7 @@
     return;
   }
 
-  const data = `id_client=${id_client}&id_type_pret=${id_type_pret}&montant=${montant}&date_pret=${date_pret}&duree_mois=${duree_mois}&date_echeance=${date_echeance}&interet=${interet}&date_validation=${date_validation}&statut=${statut}`;
+  const data = `id_client=${id_client}&id_type_pret=${id_type_pret}&montant=${montant}&date_pret=${date_pret}&duree_mois=${duree_mois}&date_echeance=${date_echeance}&interet=${interet}&date_validation=${date_validation}&statut=${statut}$assurance=${assurance}`;
 
   ajax("POST", "/pret", data, (res, status) => {
     if (status === 200 && res.message === "Prêt inséré avec succès") {
