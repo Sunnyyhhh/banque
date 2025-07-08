@@ -19,6 +19,10 @@ class UtilisateurController {
 
         //nb de types de pret
         $nb_type=TypePret::countTypePret();
+
+        //solde
+        $solde=Utilisateur::getSolde();
+
         
         if ($utilisateur && $mot_de_passe === $utilisateur['mot_de_passe'])  {
             Flight::json([
@@ -29,7 +33,7 @@ class UtilisateurController {
                     'prenom' => $utilisateur['prenom'],
                     'email' => $utilisateur['email'],
                     'statut' => $utilisateur['statut'],
-                    'solde' => $utilisateur['solde']
+                    'solde' => $solde,
                 ],
                 'nb_valides'=>$valides,
                 'nb_non_valides'=>$non_valides,

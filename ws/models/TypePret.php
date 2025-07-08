@@ -42,5 +42,12 @@ class TypePret {
         return (int) $result['total'];
     }
 
+    public static function getTypePretById($id) {
+        $db = getDB();
+        $stmt = $db->prepare("SELECT * FROM type_pret WHERE id = ?");
+        $stmt->execute([$id]);
+        return $stmt->fetch(PDO::FETCH_ASSOC);
+    }
+
 
 }

@@ -204,6 +204,10 @@
   // Réinitialiser les messages
   document.getElementById("message").textContent = "";
   document.getElementById("erreur").textContent = "";
+      event.preventDefault();
+
+      document.getElementById("message").textContent = "";
+      document.getElementById("erreur").textContent = "";
 
   // ✅ Nouveau : Récupération du client depuis le <select>
   const id_client = document.getElementById("id_client").value;
@@ -211,7 +215,7 @@
     document.getElementById("erreur").textContent = "Veuillez sélectionner un client.";
     return;
   }
-
+    
   const id_type_pret = document.getElementById("id_type_pret").value;
   const montant = parseFloat(document.getElementById("montant").value);
   const date_pret = document.getElementById("date_pret").value;
@@ -233,6 +237,10 @@
   const interet = (montant * taux * duree_mois) / (100 * 12);
   const date_validation = new Date().toISOString().split('T')[0];
   const statut = 0;
+  if (!id_type_pret || isNaN(montant) || montant <= 0 || !date_pret || isNaN(duree_mois) || duree_mois <= 0 || isNaN(taux)) {
+    document.getElementById("erreur").textContent = "Veuillez remplir tous les champs correctement.";
+    return;
+  }
 
   const data = `id_client=${id_client}&id_type_pret=${id_type_pret}&montant=${montant}&date_pret=${date_pret}&duree_mois=${duree_mois}&date_echeance=${date_echeance}&interet=${interet}&date_validation=${date_validation}&statut=${statut}`;
 
@@ -240,7 +248,7 @@
     if (status === 200 && res.message === "Prêt inséré avec succès") {
       document.getElementById("message").textContent = "✅ Prêt enregistré avec succès.";
       document.getElementById("form-pret").reset();
-      chargerListePrets(); // Rafraîchit la liste
+      chargerListePrets(); 
     } else {
       document.getElementById("erreur").textContent = res.message || "Erreur lors de l'enregistrement du prêt.";
     }
@@ -248,25 +256,40 @@
 }
 
 
-    function chargerListePrets() {
-      $.get(apiBase + "/pret_admin", function(data) {
-        let rows = '';
-        data.forEach(p => {
-          rows += `
-            <tr>
-              <td>${p.id}</td>
-              <td>${p.client_nom} ${p.client_prenom}</td>
-              <td>${p.montant}</td>
-              <td>${p.date_pret}</td>
-              <td>${p.duree_mois}</td>
-              <td>${p.date_echeance}</td>
-              <td>${p.type_pret}</td>
-              <td><button class="valider-btn" data-id="${p.id}">Valider</button></td>
-            </tr>`;
-        });
-        $('#table-prets tbody').html(rows);
+  function chargerListePrets() {
+    $.get(apiBase + "/pret_admin", function(data) {
+      let rows = '';
+      data.forEach(p => {
+        rows += `
+          <tr>
+            <td>${p.id}</td>
+            <td>${p.client_nom} ${p.client_prenom}</td>
+            <td>${p.montant}</td>
+            <td>${p.date_pret}</td>
+            <td>${p.duree_mois}</td>
+            <td>${p.date_echeance}</td>
+            <td>${p.type_pret}</td>
+            <td>
+                  <button onclick="approuverPret(${p.id}, ${p.montant})">Valider</button>
+            </td>
+          </tr>`;
       });
-    }
+      $('#table-prets tbody').html(rows);
+    });
+  }
+
+  function approuverPret(idPret,montant) {
+    const data = `id=${idPret}`;
+
+    ajax("POST", "/pret/approuver", data, (res, status) => {
+      if (status === 200 && res.message === "Prêt inséré avec succès") {
+        alert("✅ Prêt approuvé avec succès.");
+        chargerListePrets();
+      } else {
+        alert(res.message || "❌ Erreur lors de l'approbation du prêt.");
+      }
+    });
+  }
 
     document.getElementById("form-pret").addEventListener("submit", ajouterPret);
     chargerListePrets();
@@ -288,9 +311,6 @@
         }
     });
 }
-
-
-
 
     function chargerClients() {
             ajax("GET", "/clients", null, (res, status) => {
@@ -314,7 +334,7 @@
 
     window.addEventListener("DOMContentLoaded", () => {
     chargerTypePrets();
-    chargerListePrets(); // ta fonction existante
+    chargerListePrets();
 });
 
 
