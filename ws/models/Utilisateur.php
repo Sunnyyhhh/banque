@@ -10,4 +10,14 @@ class Utilisateur {
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }
 
+    public static function getSolde() 
+    {
+        $db = getDB();
+        $stmt = $db->prepare("SELECT SUM(fonds_disponibles) AS total_fonds FROM fonds");
+        $stmt->execute();
+        $result = $stmt->fetch(PDO::FETCH_ASSOC);
+        return $result['total_fonds'] !== null ? $result['total_fonds'] : 0;
+    }
+
+
 }

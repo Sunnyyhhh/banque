@@ -1,0 +1,80 @@
+<h2>Prêts valides</h2>
+<table id="table-valides" border="1">
+  <thead>
+    <tr>
+      <th>ID</th>
+      <th>Montant</th>
+      <th>Date prêt</th>
+      <th>Durée</th>
+      <th>Date échéance</th>
+      <th>Action</th> <!-- ✅ colonne ajoutée -->
+    </tr>
+  </thead>
+  <tbody></tbody>
+</table>
+
+<script>
+  const apiBase = "http://localhost/t/banque/ws";
+
+  function ajax(method, url, data, callback) {
+    const xhr = new XMLHttpRequest();
+    xhr.open(method, apiBase + url, true);
+    xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+    xhr.onreadystatechange = () => {
+      if (xhr.readyState === 4) {
+        try {
+          const res = JSON.parse(xhr.responseText);
+          callback(res, xhr.status);
+        } catch (e) {
+          console.error("Erreur parsing JSON", xhr.responseText);
+        }
+      }
+    };
+    xhr.send(data);
+  }
+
+  function chargerPretsValides() {
+    ajax("GET", "/pret/valides", null, (data, status) => {
+      if (status === 200) {
+        let rows = "";
+        data.forEach(p => {
+          rows += `
+            <tr>
+              <td>${p.id}</td>
+              <td>${p.montant}</td>
+              <td>${p.date_pret}</td>
+              <td>${p.duree_mois} mois</td>
+              <td>${p.date_echeance}</td>
+              <td>
+                <form onsubmit="rembourserPret(event, ${p.id}, ${p.id_type_pret})">
+                  <input type="hidden" name="id_type_pret" value="${p.id_type_pret}">
+                  <button type="submit">Rembourser</button>
+                </form>
+              </td>
+            </tr>
+          `;
+        });
+        document.querySelector("#table-valides tbody").innerHTML = rows;
+      } else {
+        alert("❌ Erreur lors du chargement des prêts valides.");
+      }
+    });
+  }
+
+  function rembourserPret(event, idPret, idTypePret) {
+    event.preventDefault();
+
+    const data = `id=${idPret}&id_type_pret=${idTypePret}`;
+
+    ajax("POST", "/pret/rembourser", data, (res, status) => {
+      if (status === 200 && res.message) {
+        alert("✅ " + res.message);
+        chargerPretsValides(); 
+      } else {
+        alert(res.message || "Erreur lors du remboursement.");
+      }
+    });
+  }
+
+  window.onload = chargerPretsValides;
+</script>

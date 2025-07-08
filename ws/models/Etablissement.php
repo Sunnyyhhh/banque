@@ -15,17 +15,13 @@ class Etablissement {
         }
     }
 
-    
-
-
 public static function addFonds($id, $montant) {
     try {
         $db = getDB();
-        // Insère une nouvelle ligne dans la table etablissement avec le montant
         $stmt = $db->prepare("INSERT INTO fonds (fonds_disponibles, date_ajout) VALUES (?, CURRENT_TIMESTAMP)");
         $stmt->execute([$montant]);
         $success = $stmt->rowCount() > 0;
-        error_log('addFonds: ' . ($success ? 'Nouveau fonds inséré' : 'Échec'));
+        //error_log('addFonds: ' . ($success ? 'Nouveau fonds inséré' : 'Échec'));
         return $success;
     } catch (Exception $e) {
         error_log('Erreur addFonds: ' . $e->getMessage());
