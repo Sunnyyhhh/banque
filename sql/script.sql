@@ -54,6 +54,7 @@ CREATE TABLE remboursement (
     id_pret INT NOT NULL,
     montant DECIMAL(15,2) NOT NULL CHECK (montant > 0),
     date_remboursement DATE NOT NULL,
+    interet DECIMAL(15,2)
     FOREIGN KEY (id_pret) REFERENCES pret(id)
 );
 

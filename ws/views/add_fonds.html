@@ -1,68 +1,185 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-    <meta charset="UTF-8">
-    <title>Ajouter des Fonds</title>
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <style>
-        body { font-family: Arial, sans-serif; margin: 20px; }
-        .form-container { max-width: 400px; margin: auto; }
-        .form-group { margin-bottom: 15px; }
-        label { display: block; margin-bottom: 5px; }
-        input[type="number"] { width: 100%; padding: 8px; }
-        button { padding: 10px 20px; background-color: #4CAF50; color: white; border: none; cursor: pointer; }
-        button:hover { background-color: #45a049; }
-        #message { margin-top: 10px; color: green; }
-        .error { color: red; }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Ajouter des Fonds</title>
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      font-family: Arial, sans-serif;
+      height: 100vh;
+      overflow: hidden;
+      display: flex;
+      background-color: #f4f6f8;
+    }
+
+    .sidebar {
+      width: 220px;
+      background-color: #2c3e50;
+      color: white;
+      display: flex;
+      flex-direction: column;
+      padding: 20px;
+      box-sizing: border-box;
+    }
+
+    .sidebar a {
+      color: white;
+      text-decoration: none;
+      margin: 10px 0;
+      padding: 10px;
+      border-radius: 4px;
+      transition: background-color 0.3s ease;
+    }
+
+    .sidebar a:hover {
+      background-color: #34495e;
+    }
+
+    .main-content {
+      flex: 1;
+      padding: 30px;
+      height: 100vh;
+      overflow-y: auto;
+      box-sizing: border-box;
+      background: white;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    form {
+      background: #f5f5f5;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 3px 6px rgba(0,0,0,0.1);
+      width: 100%;
+      max-width: 500px;
+      margin-bottom: 40px;
+    }
+
+    input[type="number"], button {
+      width: 100%;
+      padding: 10px;
+      margin-top: 12px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      font-size: 15px;
+      box-sizing: border-box;
+    }
+
+    button {
+      background-color: #2980b9;
+      color: white;
+      border: none;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+
+    button:hover {
+      background-color: #1f6391;
+    }
+
+    #message {
+      margin-top: 10px;
+      color: green;
+    }
+
+    .error {
+      color: red;
+    }
+
+    h2 {
+      color: #2c3e50;
+      margin-bottom: 20px;
+      text-align: center;
+    }
+
+    /* Solde affiché en bas */
+    .solde-container {
+      text-align: center;
+      margin-top: auto;
+      margin-bottom: 20px;
+    }
+
+    .solde {
+      font-size: 1.8em;
+      color: #4CAF50;
+      margin-top: 10px;
+    }
+  </style>
 </head>
 <body>
-    <div class="form-container">
-        <h2>Ajouter des Fonds à l'Établissement</h2>
-        <form id="add-fonds-form">
-            <div class="form-group">
-                <label for="montant">Montant à ajouter (€)</label>
-                <input type="number" id="montant" name="montant" step="0.01" min="0" required>
-            </div>
-            <button type="submit">Ajouter</button>
-        </form>
-        <div id="message"></div>
+
+  <nav class="sidebar">
+    <a href="dashboard.html">Home</a>
+    <a href="pret.html">Insérer prêt</a>
+    <a href="typePret.html">Types de prêts</a>
+    <a href="add_fonds.html">Ajouter des fonds</a>
+  </nav>
+
+  <main class="main-content">
+    <form id="add-fonds-form">
+      <h2>Ajouter des Fonds à l'Établissement</h2>
+      <label for="montant">Montant à ajouter (€)</label>
+      <input type="number" id="montant" name="montant" step="0.01" min="0" required>
+      <button type="submit">Ajouter</button>
+      <div id="message"></div>
+    </form>
+
+    <div class="solde-container">
+      <h2>Solde de l'Établissement</h2>
+      <div id="solde" class="solde">Chargement...</div>
     </div>
+  </main>
 
-    <script>
-        $(document).ready(function() {
-            $('#add-fonds-form').submit(function(e) {
-                e.preventDefault();
-                let montant = $('#montant').val();
+  <script>
+    // Soumission du formulaire
+    $(document).ready(function() {
+      $('#add-fonds-form').submit(function(e) {
+        e.preventDefault();
+        let montant = $('#montant').val();
 
-                if (!montant || montant <= 0) {
-                    $('#message').addClass('error').text('Veuillez saisir un montant positif.');
-                    return;
-                }
+        if (!montant || montant <= 0) {
+          $('#message').addClass('error').text('Veuillez saisir un montant positif.');
+          return;
+        }
 
-                console.log('Envoi de la requête AJAX avec montant:', montant);
-
-                $.ajax({
-                    url:  '/t/banque/ws/add_fonds', // Alternative: '/ws/add_fonds' si ws/ est la racine web
-                    type: 'POST',
-                    data: { montant: montant },
-                    success: function(response) {
-                        console.log('Réponse réussie:', response);
-                        $('#message').removeClass('error').text(response.message);
-                        $('#montant').val('');
-                        // Redirection après succès (par exemple après 1 seconde)
-                        setTimeout(function() {
-                            window.location.href = 'accueil.html';
-                        }, 1000);
-
-                    },
-                    error: function(xhr, status, error) {
-                        console.error('Erreur AJAX:', status, error, 'Response:', xhr.responseText);
-                        $('#message').addClass('error').text('Erreur lors de l\'ajout des fonds: ' + (xhr.responseText || 'Vérifiez la console pour plus de détails.'));
-                    }
-                });
-            });
+        $.ajax({
+          url: '/t/banque/ws/add_fonds',
+          type: 'POST',
+          data: { montant: montant },
+          success: function(response) {
+            $('#message').removeClass('error').text(response.message);
+            $('#montant').val('');
+            chargerSolde(); // Recharge le solde après ajout
+          },
+          error: function(xhr, status, error) {
+            $('#message').addClass('error').text('Erreur lors de l\'ajout des fonds: ' + (xhr.responseText || 'Vérifiez la console.'));
+          }
         });
-    </script>
+      });
+
+      // Chargement initial du solde
+      chargerSolde();
+    });
+
+    function chargerSolde() {
+      $.ajax({
+        url: '/t/banque/ws/get_solde_etablissement',
+        type: 'GET',
+        success: function(response) {
+          $('#solde').text('Votre solde actuel est de ' + response.solde + ' €');
+        },
+        error: function() {
+          $('#solde').text('Impossible de récupérer le solde.');
+        }
+      });
+    }
+  </script>
+
 </body>
 </html>
