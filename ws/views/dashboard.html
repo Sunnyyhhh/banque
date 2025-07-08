@@ -1,48 +1,232 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tableau de bord</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Tableau de bord</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link rel="stylesheet" href="../../styles.css" />
 </head>
 <body>
-    <a href="pret.html">inserer pret</a>
-    <div class="dashboard">
-        <h1>Bienvenue, <span id="prenom"></span> !</h1>
-        <p>Votre solde : <span id="solde"></span> €</p>
-        <p>Nombre de prêts validés : <span id="nb_valides"></span></p>
-        <p>Nombre de prêts non validés : <span id="nb_non_valides"></span></p>
-        <p>Nombre de types de prets : <span id="nb_type_pret"></span></p>
-        <a href="typePret.html">Voir les types de prêts</a>
-    </div>
 
-    <script>
-        function chargerDonneesUtilisateur() {
-            const utilisateur = JSON.parse(localStorage.getItem("utilisateur"));
-            const nb_valides = localStorage.getItem("nb_valides");
-            const nb_non_valides = localStorage.getItem("nb_non_valides");
-            const nb_type_pret=localStorage.getItem("type_pret");
+  <nav class="sidebar">
+    <a href="dashboard.html">Home</a>
+    <a href="pret.html">Insérer prêt</a>
+    <a href="typePret.html">Types de prêts</a>
+    <a href="add_fonds.html">Ajouter des fonds</a>
+  </nav>
 
-            if (utilisateur && nb_valides !== null) {
-                document.getElementById("prenom").textContent = utilisateur.prenom;
-                document.getElementById("solde").textContent = utilisateur.solde;
-                document.getElementById("nb_valides").textContent = nb_valides;
-                document.getElementById("nb_non_valides").textContent=nb_non_valides;
-                document.getElementById("nb_type_pret").textContent=nb_type_pret;
-            } else {
-                window.location.href = "../../index.html";
+  <main class="main-content">
+    
+    <section class="dashboard-header">
+      <div class="dashboard-item">
+        <h2>Bienvenue</h2>
+        <p><span id="prenom"></span></p>
+      </div>
+      <div class="dashboard-item">
+        <h2>Solde (€)</h2>
+        <p><span id="solde"></span></p>
+      </div>
+      <div class="dashboard-item">
+        <h2>Prêts validés</h2>
+        <p><span id="nb_valides"></span></p>
+      </div>
+      <div class="dashboard-item">
+        <h2>Prêts non validés</h2>
+        <p><span id="nb_non_valides"></span></p>
+      </div>
+      <div class="dashboard-item">
+        <h2>Types de prêts</h2>
+        <p><span id="nb_type_pret"></span></p>
+      </div>
+    </section>
+
+    <section class="statistics-section">
+      <h2>Statistiques des intérêts mensuels</h2>
+
+      <div class="stats-filters">
+        <label for="debut">Date début (mois/année) :</label>
+        <input type="month" id="debut" />
+
+        <label for="fin">Date fin (mois/année) :</label>
+        <input type="month" id="fin" />
+
+        <button id="filtrer">Filtrer</button>
+        <button id="reset">Réinitialiser</button>
+      </div>
+
+      <table id="table-stats" border="1" style="border-collapse: collapse; width: 100%;">
+        <thead>
+          <tr>
+            <th>Mois</th>
+            <th>Intérêt total (€)</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+        <tfoot>
+          <tr>
+            <th>Total</th>
+            <th id="total-interet">0</th>
+          </tr>
+        </tfoot>
+      </table>
+
+      <h2>Graphique des intérêts par mois</h2>
+      <canvas id="chart-interets" style="max-width: 700px; height: 400px;"></canvas>
+    </section>
+
+  </main>
+
+  <script>
+    // Ton script JavaScript ici (inchangé)
+    const apiBase = "http://localhost/t/banque/ws";
+
+    function ajax(method, url, data, callback) {
+      const xhr = new XMLHttpRequest();
+      xhr.open(method, apiBase + url, true);
+      xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+      xhr.onreadystatechange = () => {
+        if (xhr.readyState === 4) {
+          try {
+            const res = JSON.parse(xhr.responseText);
+            callback(res, xhr.status);
+          } catch (e) {
+            console.error("Erreur JSON :", xhr.responseText);
+          }
+        }
+      };
+      xhr.send(data);
+    }
+
+    function chargerDonneesUtilisateur() {
+      const utilisateur = JSON.parse(localStorage.getItem("utilisateur"));
+      const nb_valides = localStorage.getItem("nb_valides");
+      const nb_non_valides = localStorage.getItem("nb_non_valides");
+      const nb_type_pret = localStorage.getItem("type_pret");
+
+      if (utilisateur && nb_valides !== null) {
+        document.getElementById("prenom").textContent = utilisateur.prenom;
+        document.getElementById("solde").textContent = utilisateur.solde;
+        document.getElementById("nb_valides").textContent = nb_valides;
+        document.getElementById("nb_non_valides").textContent = nb_non_valides;
+        document.getElementById("nb_type_pret").textContent = nb_type_pret;
+      } else {
+        window.location.href = "../../index.html";
+      }
+    }
+
+    let chartInstance = null;
+
+    function chargerStatistiques(debut = null, fin = null) {
+      ajax("GET", "/statistque", null, (data, status) => {
+        if (status === 200 && Array.isArray(data)) {
+          const stats = {};
+          let totalInteret = 0;
+
+          const dateDebut = debut ? new Date(debut + "-01") : null;
+          const dateFin = fin ? new Date(fin + "-01") : null;
+
+          data.forEach(row => {
+            const date = new Date(row.date_remboursement);
+            const mois = date.toLocaleString('fr-FR', { month: 'long', year: 'numeric' });
+            const anneeMois = date.toISOString().slice(0, 7);
+
+            if (
+              (!dateDebut || anneeMois >= debut) &&
+              (!dateFin || anneeMois <= fin)
+            ) {
+              const interet = parseFloat(row.interet || 0);
+              if (!stats[mois]) stats[mois] = 0;
+              stats[mois] += interet;
+              totalInteret += interet;
             }
+          });
+
+          const tbody = document.querySelector("#table-stats tbody");
+          tbody.innerHTML = "";
+
+          const moisTries = Object.keys(stats).sort((a, b) => {
+            const dateA = new Date(a);
+            const dateB = new Date(b);
+            return dateA - dateB;
+          });
+
+          moisTries.forEach(mois => {
+            const tr = document.createElement("tr");
+            tr.innerHTML = `
+              <td>${mois}</td>
+              <td>${stats[mois].toFixed(2)}</td>
+            `;
+            tbody.appendChild(tr);
+          });
+
+          document.getElementById("total-interet").textContent = totalInteret.toFixed(2);
+
+          const ctx = document.getElementById('chart-interets').getContext('2d');
+          const labels = moisTries;
+          const dataChart = moisTries.map(mois => stats[mois].toFixed(2));
+
+          if (chartInstance) {
+            chartInstance.data.labels = labels;
+            chartInstance.data.datasets[0].data = dataChart;
+            chartInstance.update();
+          } else {
+            chartInstance = new Chart(ctx, {
+              type: 'bar',
+              data: {
+                labels: labels,
+                datasets: [{
+                  label: "Intérêts totaux (€)",
+                  data: dataChart,
+                  backgroundColor: 'rgba(54, 162, 235, 0.7)',
+                  borderColor: 'rgba(54, 162, 235, 1)',
+                  borderWidth: 1
+                }]
+              },
+              options: {
+                scales: {
+                  y: {
+                    beginAtZero: true
+                  }
+                },
+                plugins: {
+                  legend: {
+                    display: true,
+                    position: 'top'
+                  }
+                }
+              }
+            });
+          }
+        } else {
+          console.error("Erreur de récupération des statistiques :", data);
+        }
+      });
+    }
+
+    window.onload = () => {
+      chargerDonneesUtilisateur();
+      chargerStatistiques();
+
+      document.getElementById("filtrer").addEventListener("click", () => {
+        const debut = document.getElementById("debut").value;
+        const fin = document.getElementById("fin").value;
+
+        if (debut && fin && debut > fin) {
+          alert("La date de début doit être antérieure ou égale à la date de fin.");
+          return;
         }
 
-        window.onload = () => {
-            chargerDonneesUtilisateur();
-        };
-    </script>
-    <h1>vita ny login
-        <h1><a href="add_fonds.html">Ajouter des fonds à l'établissement</a></h1>
+        chargerStatistiques(debut, fin);
+      });
 
-    </h1>
-    <h1>Bonjour </h1>
-    <a href="typePret.html">Type prets</a>
+      document.getElementById("reset").addEventListener("click", () => {
+        document.getElementById("debut").value = "";
+        document.getElementById("fin").value = "";
+        chargerStatistiques();
+      });
+    };
+  </script>
+
 </body>
 </html>
