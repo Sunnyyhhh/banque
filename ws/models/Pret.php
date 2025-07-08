@@ -5,8 +5,8 @@ class Pret {
     public static function insertionPret($data) {
         $db = getDB();
         $stmt = $db->prepare(
-            "INSERT INTO pret (id_client, id_type_pret, montant, date_pret, duree_mois, date_echeance, interet, date_validation, statut) 
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)"
+            "INSERT INTO pret (id_client, id_type_pret, montant, date_pret, duree_mois, date_echeance, date_validation, statut,assurance) 
+            VALUES ( ?, ?, ?, ?, ?, ?, ?, ?,?)"
         );
         $stmt->execute([
             $data->id_client,
@@ -15,9 +15,9 @@ class Pret {
             $data->date_pret,
             $data->duree_mois,
             $data->date_echeance,
-            $data->interet,
             $data->date_validation ?? date('Y-m-d'),
-            $data->statut ?? 0
+            $data->statut ?? 0,
+            $data->assurance
         ]);
         return $db->lastInsertId();
     }

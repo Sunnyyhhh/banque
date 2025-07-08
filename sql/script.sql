@@ -32,9 +32,9 @@ CREATE TABLE pret (
     date_pret DATE NOT NULL,
     duree_mois INT NOT NULL CHECK (duree_mois > 0),
     date_echeance DATE NOT NULL,
-    interet DECIMAL(15,2) NOT NULL,
     date_validation DATE NOT NULL,
     statut INT NOT NULL,
+    assurance decimal(15,2),
     FOREIGN KEY (id_client) REFERENCES utilisateur(id_utilisateur),
     FOREIGN KEY (id_type_pret) REFERENCES type_pret(id)
 );
@@ -56,8 +56,6 @@ CREATE TABLE remboursement (
     date_remboursement DATE NOT NULL,
     FOREIGN KEY (id_pret) REFERENCES pret(id)
 );
-
-
 
 INSERT INTO utilisateur (nom, prenom, email, solde, statut, mot_de_passe, dtn) VALUES
 ('Dupont', 'Jean', 'jean.dupont@email.com', 1000.00, 'client', 'azerty', '1990-01-01'),
