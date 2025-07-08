@@ -1,18 +1,21 @@
 CREATE DATABASE banque;
 USE banque;
 
+--table fonds OK
 CREATE TABLE fonds (
     id INT AUTO_INCREMENT PRIMARY KEY,
     fonds_disponibles DECIMAL(15,2) NOT NULL DEFAULT 0,
     date_ajout DATETIME
 );
 
+--a tester
 CREATE TABLE type_pret (
     id INT AUTO_INCREMENT PRIMARY KEY,
     nom VARCHAR(100) NOT NULL,
     taux DECIMAL(5,2) NOT NULL CHECK (taux >= 0 AND taux <= 100)
 );
 
+--table utilisateur OK
 CREATE TABLE utilisateur (
     id_utilisateur INT AUTO_INCREMENT PRIMARY KEY,
     nom VARCHAR(50) NOT NULL,
@@ -39,22 +42,14 @@ CREATE TABLE pret (
     FOREIGN KEY (id_type_pret) REFERENCES type_pret(id)
 );
 
-
-CREATE TABLE pret_suivi (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    id_pret INT NOT NULL,
-    montant_rembourse DECIMAL(15,2) NOT NULL DEFAULT 0 CHECK (montant_rembourse >= 0),
-    statut ENUM('en cours', 'rembourse', 'en retard') DEFAULT 'en cours',
-    date_derniere_modif DATETIME DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (id_pret) REFERENCES pret(id)
-);
-
+--table remboursement OK
 CREATE TABLE remboursement (
     id INT AUTO_INCREMENT PRIMARY KEY,
     id_pret INT NOT NULL,
     montant DECIMAL(15,2) NOT NULL CHECK (montant > 0),
     date_remboursement DATE NOT NULL,
-    interet DECIMAL(15,2)
+    interet DECIMAL(15,2),
+    assurance decimal(15,2),
     FOREIGN KEY (id_pret) REFERENCES pret(id)
 );
 
